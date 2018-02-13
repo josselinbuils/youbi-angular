@@ -1,0 +1,25 @@
+:host {
+  user-select: none;
+  display: flex;
+  height: 30px;
+  -webkit-app-region: drag;
+
+  .tools {
+    display: flex;
+    height: 30px;
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    a {
+      cursor: default;
+      width: 46px;
+      height: 100%;
+      line-height: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      -webkit-app-region: no-drag;
+    }
+  }
+}
