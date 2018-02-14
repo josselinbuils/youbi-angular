@@ -1,0 +1,34 @@
+<div class="music-preview" [ngClass]="{'default-preview fa fa-music': !'currentMusic.image'}"
+     [ngStyle]="{'background-image': 'url(' + 'currentMusic.image' + ')'}"></div>
+<div class="music-info">
+  <div class="name">currentMusic.name</div>
+  <div class="artist">currentMusic.artist_name</div>
+</div>
+<div class="right">
+  <div class="controls">
+    <div class="button random-button" [ngClass]="{checked: random}" (click)="random = !random">
+      <i class="fa fa-random" aria-hidden="true"></i>
+    </div>
+    <div class="button prev-button" (click)="prev()">
+      <i class="fa fa-step-backward" aria-hidden="true"></i>
+    </div>
+    <div class="button play-button" (click)="play()">
+      <i class="fa" [ngClass]="played ? 'fa-play-circle' : 'fa-pause-circle'" aria-hidden="true"></i>
+    </div>
+    <div class="button next-button" (click)="next()">
+      <i class="fa fa-step-forward" aria-hidden="true"></i>
+    </div>
+    <div class="button repeat-button" [ngClass]="{checked: repeat}" (click)="repeat = !repeat">
+      <i class="fa fa-repeat" aria-hidden="true"></i>
+    </div>
+  </div>
+  <div class="time">
+    <div #currentTime class="current-time">00:00</div>
+    <div #progressBar class="progress-bar" (mousedown)="startSeek($event)">
+      <div class="bar-container">
+        <div class="bar" [ngStyle]="{width: progress + '%'}"></div>
+      </div>
+    </div>
+    <div class="duration">03:50</div>
+  </div>
+</div>
