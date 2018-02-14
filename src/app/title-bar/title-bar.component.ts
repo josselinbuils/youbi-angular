@@ -9,11 +9,11 @@ const remote = window.require('electron').remote;
 })
 export class TitleBarComponent {
 
-  close() {
+  close(): void {
     remote.getCurrentWindow().close();
   }
 
-  maximize() {
+  maximize(): void {
     const window = remote.getCurrentWindow();
 
     if (window.isMaximized()) {
@@ -23,7 +23,7 @@ export class TitleBarComponent {
     }
   }
 
-  minimize() {
+  minimize(): void {
     remote.getCurrentWindow().minimize();
   }
 }

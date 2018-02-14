@@ -9,11 +9,11 @@ export class ControlBarComponent {
 
   played = true;
 
-  next() {}
+  next(): void {}
 
-  play() {}
+  play(): void {}
 
-  prev() {}
+  prev(): void {}
 
-  startSeek() {}
+  startSeek(): void {}
 }
