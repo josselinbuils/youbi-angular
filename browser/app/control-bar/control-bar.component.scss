@@ -20,22 +20,74 @@ $text-color: lighten($background-color, 80%);
   background: lighten($background-color, 5%);
   border-top: 1px solid darken($background-color, 5%);
 
+  .bar {
+    width: 0;
+    background: #efefef;
+    position: relative;
+  }
+
+  .bar-container {
+    background: $secondary-color;
+  }
+
+  .bar-container, .bar {
+    height: 4px;
+    border-radius: 2px;
+  }
+
+  .button {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 25px;
+    margin-right: 25px;
+  }
+
+  .button + .button {
+    margin-left: 0;
+  }
+
+  .button:hover {
+    color: lighten($text-color, 15%);
+  }
+
+  .button:active, .button.checked {
+    color: $primary-color;
+  }
+
   .controls {
     margin-right: 24px;
+    text-align: center;
   }
 
   .default-preview {
     font-size: 50px;
     line-height: 62px;
+    background: white;
+    text-align: center;
+    color: black;
+  }
+
+  .duration {
+    margin: 0 10px;
+  }
+
+  .flex {
+    display: flex;
+  }
+
+  .left {
+    flex-grow: 1;
   }
 
   .music-info {
+    @extend .text-ellipsis;
     flex: 0 0 20ch;
     height: 62px;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
     margin-left: 15px;
+    overflow: hidden;
 
     .name, .artist {
       @extend .text-ellipsis;
@@ -58,6 +110,31 @@ $text-color: lighten($background-color, 80%);
   .play-button {
     font-size: 35px;
     line-height: 42px;
+  }
+
+  .prev-button, .next-button {
+    font-size: 20px;
+  }
+
+  .progress-bar {
+    margin: 6px 0;
+    padding: 6px 0;
+    flex-grow: 1;
+  }
+
+  .progress-bar:hover .bar, .seeking .bar {
+    background: $primary-color;
+  }
+
+  .progress-bar:hover .bar:after, .seeking .bar:after {
+    content: "";
+    background: $primary-color;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    position: absolute;
+    top: -3px;
+    right: -5px;
   }
 
   .overflow {
@@ -83,132 +160,40 @@ $text-color: lighten($background-color, 80%);
     margin: 0;
   }
 
+  .random-button, .repeat-button {
+    font-size: 15px;
+    margin-top: 1px;
+  }
+
   .right {
     flex-grow: 1;
   }
 
+  .seeking .music-info {
+    user-select: none;
+  }
+
+  .text-ellipsis {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
   .time {
+    display: flex;
     width: 90%;
     max-width: 700px;
     margin: 0 auto;
     position: relative;
 
+    .current-time {
+      margin: 0 10px 0 15px;
+    }
+
     .current-time, .duration {
+      text-align: center;
+      font-size: .8em;
       line-height: 16px;
     }
-  }
-}
-
-.bar {
-  width: 0;
-  background: #efefef;
-  position: relative;
-}
-
-.bar-container {
-  background: $secondary-color;
-}
-
-.bar-container, .bar {
-  height: 4px;
-  border-radius: 2px;
-}
-
-.button {
-  display: inline-block;
-  vertical-align: middle;
-  margin-left: 25px;
-  margin-right: 25px;
-}
-
-.button + .button {
-  margin-left: 0;
-}
-
-.button:hover {
-  color: lighten($text-color, 15%);
-}
-
-.button:active, .button.checked {
-  color: $primary-color;
-}
-
-.controls {
-  text-align: center;
-}
-
-.default-preview {
-  background: white;
-  text-align: center;
-  color: black;
-}
-
-.duration {
-  margin: 0 10px;
-}
-
-.flex {
-  display: flex;
-}
-
-.left {
-  flex-grow: 1;
-}
-
-.music-info {
-  @extend .text-ellipsis;
-  overflow: hidden;
-}
-
-.prev-button, .next-button {
-  font-size: 20px;
-}
-
-.progress-bar {
-  margin: 6px 0;
-  padding: 6px 0;
-  flex-grow: 1;
-}
-
-.progress-bar:hover .bar, .seeking .bar {
-  background: $primary-color;
-}
-
-.progress-bar:hover .bar:after, .seeking .bar:after {
-  content: "";
-  background: $primary-color;
-  width: 10px;
-  height: 10px;
-  border-radius: 5px;
-  position: absolute;
-  top: -3px;
-  right: -5px;
-}
-
-.random-button, .repeat-button {
-  font-size: 15px;
-  margin-top: 1px;
-}
-
-.seeking .music-info {
-  user-select: none;
-}
-
-.text-ellipsis {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.time {
-  display: flex;
-
-  .current-time {
-    margin: 0 10px 0 15px;
-  }
-
-  .current-time, .duration {
-    text-align: center;
-    font-size: .8em;
   }
 }

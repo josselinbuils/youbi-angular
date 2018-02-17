@@ -1,0 +1,21 @@
+:host {
+
+  * {
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
+
+  app-browser {
+    top: 30px;
+    bottom: 80px;
+  }
+
+  app-control-bar {
+    bottom: 0;
+  }
+
+  app-title-bar {
+    top: 0;
+  }
+}

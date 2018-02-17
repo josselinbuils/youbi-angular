@@ -1,7 +1,10 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "./dist/out-tsc",
+    "outDir": "../out-tsc/app",
+    "baseUrl": "./",
+    "module": "es2015",
+    "types": [],
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",

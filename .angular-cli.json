@@ -5,7 +5,7 @@
   },
   "apps": [
     {
-      "root": "src",
+      "root": "browser",
       "outDir": "dist",
       "assets": [
         "assets",
@@ -14,7 +14,7 @@
       "index": "index.html",
       "main": "main.ts",
       "polyfills": "polyfills.ts",
-      "tsconfig": "tsconfig.app.json",
+      "tsconfig": "tsconfig.json",
       "prefix": "app",
       "styles": [
         "styles.scss"
@@ -29,7 +29,7 @@
   ],
   "lint": [
     {
-      "project": "src/tsconfig.app.json",
+      "project": "browser/tsconfig.json",
       "exclude": "**/node_modules/**"
     }
   ],
