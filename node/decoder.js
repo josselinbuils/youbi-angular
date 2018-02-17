@@ -1,9 +1,12 @@
 const {Asset} = require('av');
 const {pathExistsSync} = require('fs-extra');
-const {PassThrough} = require('stream');
+const through = require('through');
 
-// codecs
+// Aurora codecs
+require('mp3');
+// require('aac');
 require('alac');
+require('flac.js');
 
 class Decoder {
   static async decode(path) {
@@ -13,45 +16,30 @@ class Decoder {
         throw Error('File not found');
       }
 
-      console.time('decoder: createAssetFromFile');
       const asset = Asset.fromFile(path);
-      console.timeEnd('decoder: createAssetFromFile');
+      const audioStream = through();
 
-      asset.on('error', reject)
+      asset.on('error', reject);
 
-      console.log(asset.decoder);
-
-
-      console.time('decoder: decode');
-      asset.decodeToBuffer(float32Array => {
-        console.timeEnd('decoder: decode');
-
-        console.time('decoder: formatDecodedData');
-        let int16Array = new Int16Array(float32Array.length);
-
-        for (let i = 0; i < float32Array.length; i++) {
-          if (float32Array[i] < 0) {
-            int16Array[i] = 0x8000 * float32Array[i];
-          } else {
-            int16Array[i] = 0x7FFF * float32Array[i];
-          }
-        }
-
-        const buffer = Buffer.from(int16Array.buffer);
-
-        console.timeEnd('decoder: formatDecodedData');
-
-        console.time('decoder: createStream');
-        const stream = new PassThrough();
-        stream.end(buffer);
-        console.timeEnd('decoder: createStream');
-
-        resolve({
-          channels: asset.format.channelsPerFrame,
-          sampleRate: asset.format.sampleRate,
-          stream: stream
+      // Needs to wait for decodeStart event to have asset.decoder defined
+      asset.on('decodeStart', () => {
+        asset.decoder.on('data', typedArray => {
+          // Converts ArrayBuffer of input TypedArray to Buffer and writes the result into the output stream
+          audioStream.write(Buffer.from(typedArray.buffer));
         });
       });
+
+      asset.on('format', format => {
+        console.log(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}KHz`);
+        resolve({
+          audioStream,
+          bits: format.bitsPerChannel,
+          channels: format.channelsPerFrame,
+          sampleRate: format.sampleRate,
+        });
+      });
+
+      asset.start();
     });
   }
 }
