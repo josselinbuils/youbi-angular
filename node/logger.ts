@@ -8,7 +8,7 @@ enum LogLevel {
 
 export class Logger {
 
-  private static colors = ['blue', 'magenta', 'cyan', 'yellow', 'lightGray', 'lightBlue', 'lightMagenta', 'lightCyan', 'lightYellow'];
+  private static colors = ['blue', 'magenta', 'cyan', 'yellow', 'lightGray', 'lightMagenta', 'lightCyan', 'lightYellow'];
   private static n = 0;
 
   color: string;
@@ -24,7 +24,7 @@ export class Logger {
   private static getLogLevelColor(level: LogLevel): string {
     switch (level) {
       case LogLevel.Debug:
-        return 'lightGreen';
+        return 'lightBlue';
       case LogLevel.Info:
         return 'green';
       case LogLevel.Error:

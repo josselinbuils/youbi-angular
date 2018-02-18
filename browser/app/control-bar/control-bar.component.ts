@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 
+const ipc = window.require('ipc-promise');
+
 @Component({
   selector: 'app-control-bar',
   templateUrl: './control-bar.component.html',
@@ -14,7 +16,10 @@ export class ControlBarComponent {
 
   next(): void {}
 
-  play(): void {}
+  async play(): Promise<void> {
+    const musics = await ipc.send('browser', { name: 'getMusicList', args: ['\\\\DISKSTATION\\music'] });
+    ipc.send('player', { name: 'play', args: [musics.filter(m => /journee/i.test(m))[0]] });
+  }
 
   prev(): void {}
 

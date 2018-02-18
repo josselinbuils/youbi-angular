@@ -46,7 +46,9 @@ app.on('ready', () => {
 
   Object.entries(executors).forEach(([name, executor]) => {
     ipc.on(name, command => {
-      logger.debug(`Execute: ${name}->${command.name}()`);
+      const logHeader = `${name}->${command.name}`;
+
+      logger.debug(`Execute: ${logHeader}()`);
 
       if (typeof executor[command.name] !== 'function') {
         return Promise.reject(new Error('Unknown executor method'));
@@ -54,11 +56,10 @@ app.on('ready', () => {
 
       try {
         let res = executor[command.name].apply(executor, command.args);
-        logger.debug(`Execute response type: ${res instanceof Promise ? 'promise' : 'other'}`);
 
         if (res instanceof Promise) {
           res = res.catch(error => {
-            logger.error(`${name}->${command.name}: ${error.stack}`);
+            logger.error(`${logHeader}: ${error.stack}`);
             throw error;
           });
         } else {
@@ -68,7 +69,7 @@ app.on('ready', () => {
         return res;
 
       } catch (error) {
-        logger.info('catch error', error);
+        logger.info(`${logHeader}: ${error.stack}`);
         return Promise.reject(error);
       }
     });

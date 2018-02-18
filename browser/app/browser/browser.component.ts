@@ -1,18 +1,10 @@
-import { AfterContentInit, Component } from '@angular/core';
-
-const ipc = window.require('ipc-promise');
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-browser',
   templateUrl: './browser.component.html',
   styleUrls: ['./browser.component.scss'],
 })
-export class BrowserComponent implements AfterContentInit {
-
+export class BrowserComponent {
   currentMusic: any = {};
-
-  async ngAfterContentInit(): Promise<void> {
-    const musics = await ipc.send('browser', { name: 'getMusicList', args: ['\\\\DISKSTATION\\music'] });
-    ipc.send('player', { name: 'play', args: [musics[1]] });
-  }
 }

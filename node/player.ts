@@ -1,7 +1,7 @@
 import { pathExistsSync } from 'fs-extra';
-import { AudioOutput, getDevices, SampleFormat16Bit, SampleFormat24Bit } from 'naudiodon';
+import { AudioOutput, getDevices } from 'naudiodon';
 
-import { Decoder } from './decoder';
+import { Decoder, DecodingFormat } from './decoder';
 import { Logger } from './logger';
 
 const logger = Logger.create('Player');
@@ -9,7 +9,9 @@ const logger = Logger.create('Player');
 export class Player {
 
   private audioOutput: AudioOutput;
+  private audioStream;
   private decoder = Decoder.create();
+  private state: PlayerState = PlayerState.Stopped;
 
   static create(): Player {
     return new Player();
@@ -22,48 +24,65 @@ export class Player {
       throw Error('File not found');
     }
 
-    const devices = getDevices()
-      .map(d => `- ${d.name} (${d.hostAPIName})`)
-      .join('\n');
+    // const devices = getDevices()
+    //   .map(d => `- ${d.name} (${d.hostAPIName})`)
+    //   .join('\n');
 
-    logger.debug(`Available devices:\n${devices}\n`);
+    // logger.debug(`Available devices:\n${devices}\n`);
 
     const device = getDevices()
       .filter(d => /usb|dx7/i.test(d.name) && /wdm/i.test(d.hostAPIName))[0];
 
+    if (this.decoder.isActive()) {
+      logger.debug('Decoder active, stops it');
+      this.decoder.stop();
+
+      logger.debug('Stops audio output');
+      await this.audioOutput.stop();
+    }
+
     console.time('decode');
-    const decoded = await this.decoder.decode(path);
+    const { audioStream, format } = await this.decoder.start(path);
     console.timeEnd('decode');
 
-    const endAudioOutput = () => logger.debug('Ends audio output') && this.audioOutput.end();
-    decoded.audioStream.on('end', () => logger.debug('"end" event received from audio stream') && endAudioOutput());
-    decoded.audioStream.on('close', () => logger.debug('"close" event received from audio stream') && endAudioOutput());
+    logger.debug(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}KHz`);
 
-    const options = {
-      channelCount: decoded.channels,
-      sampleFormat: this.getSampleFormat(decoded.bitDepth),
-      sampleRate: decoded.sampleRate,
-      deviceId: device.id,
-    };
+    this.audioStream = audioStream;
 
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    logger.debug('Creates audio output with options:', options);
-    this.audioOutput = new AudioOutput(options);
+    // logger.debug('Stops audio output if active');
+    // await this.stopAudioOutput();
+
+    logger.debug('Starts a new audio output');
+    this.startAudioOutput(format, device.id);
+
+    this.state = PlayerState.Playing;
+  }
+
+  private startAudioOutput(format: DecodingFormat, deviceId: number): void {
+    logger.debug(`Creates audio output on device ${deviceId}`);
+
+    this.audioOutput = new AudioOutput({
+      channelCount: format.channelsPerFrame,
+      sampleFormat: format.bitsPerChannel,
+      sampleRate: format.sampleRate,
+      deviceId,
+    });
+
+    this.audioOutput.on('stopped', () => {
+      logger.debug('Audio output stopped');
+      this.state = PlayerState.Stopped;
+    });
 
     logger.debug('Links stream to audio output');
-    decoded.audioStream.pipe(this.audioOutput);
+    this.audioStream.pipe(this.audioOutput);
 
     logger.debug('Starts audio output');
+    this.audioOutput.start();
   }
+}
 
-  private getSampleFormat(bitDepth: number): number {
-    switch (bitDepth) {
-      case 16:
-        return SampleFormat16Bit;
-      case 24:
-        return SampleFormat24Bit;
-      default:
-        throw new Error('Invalid bit depth');
-    }
-  }
+enum PlayerState {
+  Paused,
+  Playing,
+  Stopped,
 }

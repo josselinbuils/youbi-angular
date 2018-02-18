@@ -21,23 +21,19 @@ export class Decoder {
     return new Decoder();
   }
 
-  async decode(path: string): Promise<DecodingResult> {
-    return new Promise<DecodingResult>((resolve, reject) => {
+  isActive(): boolean {
+    return this.asset !== undefined && this.asset.active;
+  }
 
-      if (this.asset !== undefined) {
-        logger.debug('Stop asset');
-        this.asset.stop();
-      }
+  async start(path: string): Promise<DecodingMetadata> {
+    return new Promise<DecodingMetadata>((resolve, reject) => {
 
-      if (this.audioStream !== undefined) {
-        logger.debug('Destroy audio stream');
-        this.audioStream.destroy();
+      if (this.isActive()) {
+        throw new Error('Decoder active');
       }
 
       this.asset = Asset.fromFile(path);
       this.audioStream = through();
-
-      this.asset.on('error', reject);
 
       // Needs to wait for decodeStart event to have asset.decoder defined
       this.asset.on('decodeStart', () => {
@@ -47,24 +43,33 @@ export class Decoder {
         });
       });
 
-      this.asset.on('format', format => {
-        logger.debug(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}KHz`);
-        resolve({
-          audioStream: this.audioStream,
-          bitDepth: format.bitsPerChannel,
-          channels: format.channelsPerFrame,
-          sampleRate: format.sampleRate,
-        });
-      });
+      this.asset.on('format', format => resolve({ audioStream: this.audioStream, format }));
+      this.asset.on('error', reject);
 
       this.asset.start();
     });
   }
+
+  stop(): void {
+    logger.debug('Stops asset');
+
+    if (!this.isActive()) {
+      throw new Error('Decoder inactive');
+    }
+
+    this.asset.stop();
+    this.audioStream.destroy();
+  }
 }
 
-interface DecodingResult {
-  audioStream: Transform;
-  bitDepth: number;
-  channels: number;
+export interface DecodingFormat {
+  formatID: string;
   sampleRate: number;
+  channelsPerFrame: number;
+  bitsPerChannel: number;
+}
+
+export interface DecodingMetadata {
+  audioStream: Transform;
+  format: DecodingFormat;
 }
