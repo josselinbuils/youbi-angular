@@ -24,7 +24,7 @@
   </div>
   <div class="time">
     <div #currentTime class="current-time">00:00</div>
-    <div #progressBar class="progress-bar" (mousedown)="startSeek($event)">
+    <div #progressBar class="progress-bar" (mousedown)="startSeek()">
       <div class="bar-container">
         <div class="bar" [ngStyle]="{width: progress + '%'}"></div>
       </div>

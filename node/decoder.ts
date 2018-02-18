@@ -1,21 +1,16 @@
-const {Asset} = require('av');
-const {pathExistsSync} = require('fs-extra');
-const through = require('through');
+import { Asset } from 'av';
+import { Transform } from 'stream';
+import * as through from 'through';
 
 // Aurora codecs
-require('mp3');
-// require('aac');
-require('alac');
-require('flac.js');
+// import'aac');
+import 'alac';
+import 'flac.js';
+import 'mp3';
 
-class Decoder {
-  static async decode(path) {
-    return new Promise((resolve, reject) => {
-
-      if (!pathExistsSync(path)) {
-        throw Error('File not found');
-      }
-
+export class Decoder {
+  static async decode(path: string): Promise<DecodingResult> {
+    return new Promise<DecodingResult>((resolve, reject) => {
       const asset = Asset.fromFile(path);
       const audioStream = through();
 
@@ -33,7 +28,7 @@ class Decoder {
         console.log(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}KHz`);
         resolve({
           audioStream,
-          bits: format.bitsPerChannel,
+          bitDepth: format.bitsPerChannel,
           channels: format.channelsPerFrame,
           sampleRate: format.sampleRate,
         });
@@ -44,4 +39,9 @@ class Decoder {
   }
 }
 
-module.exports = {Decoder};
+interface DecodingResult {
+  audioStream: Transform;
+  bitDepth: number;
+  channels: number;
+  sampleRate: number;
+}

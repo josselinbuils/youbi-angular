@@ -8,6 +8,9 @@ import { Component } from '@angular/core';
 export class ControlBarComponent {
 
   played = true;
+  progress = 0;
+  random: boolean;
+  repeat: boolean;
 
   next(): void {}
 

@@ -1,15 +1,16 @@
-const {app, BrowserWindow} = require('electron');
-const naudiodon = require('naudiodon');
-// const path = require('path');
-// const url = require('url');
+import { app, BrowserWindow } from 'electron';
+import * as ipc from 'ipc-promise';
+// const {join} = require('path');
+// const {format} = require('url');
 
-const {Decoder} = require('./decoder');
+import { Browser } from './browser';
+import { Player } from './player';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win;
+let win: BrowserWindow;
 
-function createWindow() {
+function createWindow(): void {
   // Create the browser window.
   win = new BrowserWindow({
     width: 800,
@@ -20,43 +21,13 @@ function createWindow() {
     backgroundColor: '#111625',
   });
 
-  const path = //'\\\\DISKSTATION\\music\\Noir Désir\\Des Visages des Figures\\02 Le Grand Incendie.m4a';
-    'C:\\Users\\Josselin\\Downloads\\3-02 C\'est Une Belle Journee.m4a';
-    // '\\\\DISKSTATION\\music\\Shaka Ponk\\The Black Pixel Ape (Drinking Cigarettes to Take a Break)\\01 On the Ro\'.m4a';
-    // 'C:\\Users\\Josselin\\Downloads\\Goldfrapp-Tales_Of_Us\\01-01-Goldfrapp-Jo-SMR.flac';
-
-
-  const devices = naudiodon.getDevices()
-    .map(device => `- ${device.name} (${device.hostAPIName})`)
-    .join('\n');
-
-  console.log(`Available devices:\n${devices}\n`);
-
-  const device = naudiodon.getDevices()
-    .filter(device => /usb|dx7/i.test(device.name) && /wdm/i.test(device.hostAPIName))[0];
-
-  console.time('decode');
-  Decoder.decode(path).then(decoded => {
-    console.timeEnd('decode');
-
-    const audioOutput = new naudiodon.AudioOutput({
-      channelCount: decoded.channels,
-      sampleFormat: naudiodon[`SampleFormat${decoded.bits}Bit`],
-      sampleRate: decoded.sampleRate,
-      deviceId: device.id
-    });
-
-    decoded.audioStream.pipe(audioOutput);
-    audioOutput.start();
-  });
-
   // and load the index.html of the app.
-  // win.loadURL(url.format({
-  //   pathname: path.join(__dirname, 'dist/index.html'),
+  // win.loadURL(format({
+  //   pathname: join(__dirname, '../dist/index.html'),
   //   protocol: 'file:',
   //   slashes: true,
   // }));
-  win.loadURL('http://localhost:4200');
+  win.loadURL('http://localhost:4200', { extraHeaders: 'pragma: no-cache\n' });
 
   // Open the DevTools.
   win.webContents.openDevTools();
@@ -73,7 +44,30 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  createWindow();
+
+  const browser = Browser.create();
+  const player = Player.create();
+  const executors = { browser, player };
+
+  Object.entries(executors).forEach(([name, executor]) => {
+    ipc.on(name, command => {
+      console.log(`Execute: ${name}->${command.name}()`);
+
+      if (typeof executor[command.name] !== 'function') {
+        return Promise.reject(new Error('Unknown executor method'));
+      }
+
+      try {
+        const res = executor[command.name].apply(executor, command.args);
+        return res instanceof Promise ? res : Promise.resolve(res);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    });
+  });
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
