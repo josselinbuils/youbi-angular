@@ -3,10 +3,12 @@ import { Transform } from 'stream';
 import * as through from 'through';
 
 // Aurora codecs
-// import'aac');
+import 'aac';
 import 'alac';
 import 'flac.js';
 import 'mp3';
+import 'ogg.js';
+import 'vorbis.js';
 
 import { Logger } from './logger';
 
