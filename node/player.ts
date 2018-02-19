@@ -38,13 +38,14 @@ export class Player {
     const format = await this.decoder.getFormat(path);
     logger.debug(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}KHz`);
 
-    this.startAudioOutput(format, device.id);
-
+    this.audioOutput = this.createAudioOutput(format, device.id);
     this.audioStream = this.decoder.start(path);
 
     logger.debug('Links stream to audio output');
     this.audioStream.pipe(this.audioOutput);
 
+    logger.debug('Starts audio output');
+    this.audioOutput.start();
     this.state = PlayerState.Playing;
   }
 
@@ -59,23 +60,22 @@ export class Player {
     }
   }
 
-  private startAudioOutput(format: DecodingFormat, deviceId: number): void {
+  private createAudioOutput(format: DecodingFormat, deviceId: number): AudioOutput {
     logger.debug(`Creates audio output on device ${deviceId}`);
 
-    this.audioOutput = new AudioOutput({
+    const audioOutput = new AudioOutput({
       channelCount: format.channelsPerFrame,
       sampleFormat: format.bitsPerChannel,
       sampleRate: format.sampleRate,
       deviceId,
     });
 
-    this.audioOutput.on('stopped', () => {
+    audioOutput.on('stopped', () => {
       logger.debug('Audio output stopped');
       this.state = PlayerState.Stopped;
     });
 
-    logger.debug('Starts audio output');
-    this.audioOutput.start();
+    return audioOutput;
   }
 }
 
