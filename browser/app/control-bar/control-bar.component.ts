@@ -9,16 +9,21 @@ const ipc = window.require('ipc-promise');
 })
 export class ControlBarComponent {
 
-  played = true;
+  playing = false;
   progress = 0;
   random: boolean;
   repeat: boolean;
 
   next(): void {}
 
-  async play(): Promise<void> {
-    const musics = await ipc.send('browser', { name: 'getMusicList', args: ['\\\\DISKSTATION\\music'] });
-    ipc.send('player', { name: 'play', args: [musics.filter(m => /journee/i.test(m))[0]] });
+  play(): void {
+    if (this.playing) {
+      ipc.send('player', { name: 'stop' });
+    } else {
+      // const musics = await ipc.send('browser', { name: 'getMusicList', args: ['\\\\DISKSTATION\\music'] });
+      ipc.send('player', { name: 'play', args: ['C:\\Users\\Josselin\\Downloads\\3-02 C\'est Une Belle Journee.m4a'] });
+    }
+    this.playing = !this.playing;
   }
 
   prev(): void {}

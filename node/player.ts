@@ -33,29 +33,30 @@ export class Player {
     const device = getDevices()
       .filter(d => /usb|dx7/i.test(d.name) && /wdm/i.test(d.hostAPIName))[0];
 
+    await this.stop();
+
+    const format = await this.decoder.getFormat(path);
+    logger.debug(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}KHz`);
+
+    this.startAudioOutput(format, device.id);
+
+    this.audioStream = this.decoder.start(path);
+
+    logger.debug('Links stream to audio output');
+    this.audioStream.pipe(this.audioOutput);
+
+    this.state = PlayerState.Playing;
+  }
+
+  async stop(): Promise<void> {
     if (this.decoder.isActive()) {
       logger.debug('Decoder active, stops it');
       this.decoder.stop();
-
-      logger.debug('Stops audio output');
+    }
+    if (this.audioOutput !== undefined && this.audioOutput.isActive()) {
+      logger.debug('Audio output active, stops it');
       await this.audioOutput.stop();
     }
-
-    console.time('decode');
-    const { audioStream, format } = await this.decoder.start(path);
-    console.timeEnd('decode');
-
-    logger.debug(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}KHz`);
-
-    this.audioStream = audioStream;
-
-    // logger.debug('Stops audio output if active');
-    // await this.stopAudioOutput();
-
-    logger.debug('Starts a new audio output');
-    this.startAudioOutput(format, device.id);
-
-    this.state = PlayerState.Playing;
   }
 
   private startAudioOutput(format: DecodingFormat, deviceId: number): void {
@@ -72,9 +73,6 @@ export class Player {
       logger.debug('Audio output stopped');
       this.state = PlayerState.Stopped;
     });
-
-    logger.debug('Links stream to audio output');
-    this.audioStream.pipe(this.audioOutput);
 
     logger.debug('Starts audio output');
     this.audioOutput.start();
