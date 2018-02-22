@@ -48,7 +48,7 @@ export class Player {
     this.device = getDevices()
       .filter(d => /usb|dx7/i.test(d.name) && /wdm/i.test(d.hostAPIName))[0];
 
-    await this.stop();
+    this.stop();
 
     const format = await this.decoder.get('format', path) as DecodingFormat;
     const durationSeconds = Math.round((await this.decoder.get('duration', path) as number) / 1000);

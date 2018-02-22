@@ -5,12 +5,13 @@
   "scripts": {
     "build": "npm run build-node && npm run build-browser",
     "build-browser": "ng build --prod",
+    "build-lib": "npm install ../naudiodon && npm run postinstall",
     "build-node": "tsc -p ./node/tsconfig.json",
-    "lint-browser": "ng lint",
+    "lint": "npm run lint-browser && npm run lint-node",
+    "lint-browser": "tslint -c ./browser/tslint.json -p ./browser/tsconfig.json ./browser/**/*.ts",
+    "lint-node": "tslint -c ./node/tslint.json -p ./node/tsconfig.json ./node/**/*.ts",
     "postinstall": "electron-rebuild",
-    "start": "concurrently --kill-others \"npm run start-browser\" \"sleepms 5000 && npm run start-node\"",
-    "start-browser": "ng serve",
-    "start-node": "npm run build-node && electron ."
+    "start": "npm run build-node && electron ."
   },
   "main": "dist/node/main.js",
   "private": true,
@@ -38,7 +39,7 @@
     "naudiodon": "file:../naudiodon",
     "ogg.js": "^0.1.0",
     "rxjs": "^5.5.6",
-    "through": "^2.3.8",
+    "through2": "^2.0.3",
     "vorbis.js": "^0.1.1",
     "zone.js": "^0.8.19"
   },
@@ -49,10 +50,8 @@
     "@types/electron": "^1.6.10",
     "@types/node": "~9.4.6",
     "codelyzer": "^4.0.1",
-    "concurrently": "^3.5.1",
     "electron-rebuild": "^1.7.3",
     "font-awesome": "^4.7.0",
-    "sleep-ms": "^2.0.1",
     "tslint": "~5.9.1",
     "typescript": "~2.7.2"
   }

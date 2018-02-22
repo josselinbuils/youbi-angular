@@ -46,6 +46,11 @@ app.on('ready', () => {
 
   Object.entries(executors).forEach(([name, executor]) => {
     ipc.on(name, command => {
+
+      if (typeof command === 'string') {
+        command = { name: command };
+      }
+
       const logHeader = `${name}->${command.name}`;
 
       logger.debug(`Execute: ${logHeader}()`);
@@ -63,13 +68,14 @@ app.on('ready', () => {
             throw error;
           });
         } else {
+          logger.debug(`${logHeader}: ${res}`);
           res = Promise.resolve(res);
         }
 
         return res;
 
       } catch (error) {
-        logger.info(`${logHeader}: ${error.stack}`);
+        logger.error(`${logHeader}: ${error.stack}`);
         return Promise.reject(error);
       }
     });

@@ -53,7 +53,7 @@ export class Decoder {
     }
   }
 
-  start(path: string): Promise<Transform> {
+  async start(path: string): Promise<Transform> {
     return new Promise<Transform>(resolve => {
 
       if (this.isActive()) {
