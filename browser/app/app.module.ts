@@ -5,6 +5,7 @@ import { AppComponent } from './app.component';
 import { BrowserComponent } from './browser/browser.component';
 import { ControlBarComponent } from './control-bar/control-bar.component';
 import { MusicManagerService } from './shared/music-manager.service';
+import { MusicPlayerService } from './shared/music-player.service';
 import { TitleBarComponent } from './title-bar/title-bar.component';
 
 @NgModule({
@@ -17,7 +18,10 @@ import { TitleBarComponent } from './title-bar/title-bar.component';
   imports: [
     BrowserModule,
   ],
-  providers: [MusicManagerService],
+  providers: [
+    MusicManagerService,
+    MusicPlayerService,
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {

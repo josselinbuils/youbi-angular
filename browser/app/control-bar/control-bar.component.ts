@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 
-const ipc = window.require('ipc-promise');
+import { PlayerState } from '../../../shared/constants';
+import { MusicPlayerService } from '../shared/music-player.service';
 
 @Component({
   selector: 'app-control-bar',
@@ -9,41 +10,35 @@ const ipc = window.require('ipc-promise');
 })
 export class ControlBarComponent {
 
-  playerState = PlayerState;
+  playerState: PlayerState;
+  PlayerState = PlayerState;
   progress = 0;
   random: boolean;
   repeat: boolean;
-  state: PlayerState;
+
+  constructor(private musicPlayerService: MusicPlayerService) {
+    musicPlayerService.onState().subscribe(state => this.playerState = state);
+  }
 
   next(): void {}
 
   async play(): Promise<void> {
-    const state = await ipc.send('player', 'getState');
+    switch (this.playerState) {
 
-    switch (state) {
       case PlayerState.Paused:
-        this.state = await ipc.send('player', 'resume');
+        await this.musicPlayerService.resume();
         break;
 
       case PlayerState.Playing:
-        this.state = await ipc.send('player', 'pause');
+        await this.musicPlayerService.pause();
         break;
 
       case PlayerState.Stopped:
-        // const musics = await ipc.send('browser', { name: 'getMusicList', args: ['\\\\DISKSTATION\\music'] });
-        this.state =
-          await ipc.send('player', { name: 'play', args: ['C:\\Users\\Josselin\\Downloads\\3-02 C\'est Une Belle Journee.m4a'] });
+        await this.musicPlayerService.play('C:\\Users\\Josselin\\Downloads\\3-02 C\'est Une Belle Journee.m4a');
     }
-    console.log('state:', this.state);
   }
 
   prev(): void {}
 
   startSeek(): void {}
-}
-
-enum PlayerState {
-  Paused = 'PAUSED',
-  Playing = 'PLAYING',
-  Stopped = 'STOPPED',
 }

@@ -34,7 +34,7 @@ export class Browser {
 
     console.time('musicList');
 
-    if (!store.has('musicList')) {
+    if (store.has('musicList')) {
       logger.debug('From cache');
       musicMap = store.get('musicList').musicMap;
     } else {

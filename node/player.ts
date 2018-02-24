@@ -1,6 +1,8 @@
 import { pathExistsSync } from 'fs-extra';
 import { AudioOutput, getDevices } from 'naudiodon';
 
+import { PlayerState } from '../shared/constants';
+
 import { Decoder, DecodingFormat } from './decoder';
 import { Logger } from './logger';
 
@@ -65,10 +67,6 @@ export class Player {
     logger.debug('Starts audio output');
     this.audioOutput.start();
 
-    setTimeout(() => {
-      this.seek(230);
-    }, 3000);
-
     return this.getState();
   }
 
@@ -125,10 +123,4 @@ export class Player {
 
     return audioOutput;
   }
-}
-
-export enum PlayerState {
-  Paused = 'PAUSED',
-  Playing = 'PLAYING',
-  Stopped = 'STOPPED',
 }
