@@ -1,8 +1,8 @@
-<div class="music-preview" [ngClass]="{'default-preview fa fa-music': !'currentMusic.image'}"
-     [ngStyle]="{'background-image': 'url(' + 'currentMusic.image' + ')'}"></div>
-<div class="music-info">
-  <div class="name">currentMusic.name</div>
-  <div class="artist">currentMusic.artist_name</div>
+<div class="music-preview" [ngClass]="{'default-preview fa fa-music': !activeMusic}"
+     [ngStyle]="{'background-image': 'url(' + (activeMusic ? activeMusic.imageUrl : '') + ')'}"></div>
+<div class="music-info" *ngIf="activeMusic">
+  <div class="name">{{activeMusic.title}}</div>
+  <div class="artist">{{activeMusic.artist}}</div>
 </div>
 <div class="right">
   <div class="controls">
@@ -13,7 +13,8 @@
       <i class="fa fa-step-backward" aria-hidden="true"></i>
     </div>
     <div class="button play-button" (click)="play()">
-      <i class="fa" [ngClass]="playerState !== PlayerState.Playing ? 'fa-play-circle' : 'fa-pause-circle'" aria-hidden="true"></i>
+      <i class="fa" [ngClass]="playerState !== PlayerState.Playing ? 'fa-play-circle' : 'fa-pause-circle'"
+         aria-hidden="true"></i>
     </div>
     <div class="button next-button" (click)="next()">
       <i class="fa fa-step-forward" aria-hidden="true"></i>
@@ -23,12 +24,12 @@
     </div>
   </div>
   <div class="time">
-    <div #currentTime class="current-time">00:00</div>
-    <div #progressBar class="progress-bar" (mousedown)="startSeek()">
+    <div #currentTime class="current-time">{{readableTime}}</div>
+    <div #progressBar class="progress-bar" (mousedown)="startSeek($event)">
       <div class="bar-container">
         <div class="bar" [ngStyle]="{width: progress + '%'}"></div>
       </div>
     </div>
-    <div class="duration">03:50</div>
+    <div class="duration">{{readableDuration}}</div>
   </div>
 </div>

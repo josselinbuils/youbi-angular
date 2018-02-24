@@ -1,4 +1,4 @@
-import { app, BrowserWindow, WebContents } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import * as ipc from 'ipc-promise';
 // const {join} = require('path');
 // const {format} = require('url');

@@ -1,7 +1,7 @@
 import { pathExistsSync } from 'fs-extra';
 import { AudioOutput, getDevices } from 'naudiodon';
 
-import { PlayerState } from '../shared/constants';
+import { PlayerState } from '../shared';
 
 import { Decoder, DecodingFormat } from './decoder';
 import { Logger } from './logger';
@@ -35,7 +35,11 @@ export class Player {
   pause(): PlayerState {
     if (this.getState() === PlayerState.Playing) {
       logger.info('Pause');
-      this.audioOutput.stop();
+      try {
+        this.audioOutput.stop();
+      } catch (error) {
+        logger.error(error);
+      }
     }
     return this.getState();
   }
@@ -47,25 +51,30 @@ export class Player {
       throw Error('File not found');
     }
 
-    this.device = getDevices()
-      .filter(d => /usb|dx7/i.test(d.name) && /wdm/i.test(d.hostAPIName))[0];
+    try {
+      this.device = getDevices()
+        .filter(d => /usb|dx7/i.test(d.name) && /wdm/i.test(d.hostAPIName))[0];
 
-    this.stop();
+      this.stop();
 
-    const format = await this.decoder.get('format', path) as DecodingFormat;
-    const durationSeconds = Math.round((await this.decoder.get('duration', path) as number) / 1000);
-    this.currentMusic = { durationSeconds, format };
+      const format = await this.decoder.get('format', path) as DecodingFormat;
+      const durationSeconds = Math.round((await this.decoder.get('duration', path) as number) / 1000);
+      this.currentMusic = { durationSeconds, format };
 
-    logger.debug(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}Hz`);
+      logger.debug(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}Hz`);
 
-    this.audioOutput = this.createAudioOutput(format, this.device.id);
-    this.audioStream = await this.decoder.start(path);
+      this.audioOutput = this.createAudioOutput(format, this.device.id);
+      this.audioStream = await this.decoder.start(path);
 
-    logger.debug('Links stream to audio output');
-    this.audioStream.pipe(this.audioOutput);
+      logger.debug('Links stream to audio output');
+      this.audioStream.pipe(this.audioOutput);
 
-    logger.debug('Starts audio output');
-    this.audioOutput.start();
+      logger.debug('Starts audio output');
+      this.audioOutput.start();
+
+    } catch (error) {
+      logger.error(error);
+    }
 
     return this.getState();
   }
@@ -73,36 +82,57 @@ export class Player {
   resume(): PlayerState {
     if (this.getState() === PlayerState.Paused) {
       logger.info('Resume');
-      this.audioOutput.start();
+      try {
+        this.audioOutput.start();
+      } catch (error) {
+        logger.error(error);
+      }
     }
     return this.getState();
   }
 
-  seek(timeSeconds: number): void {
+  seek(timeSeconds: number): PlayerState {
 
     if (this.currentMusic === undefined) {
       throw new Error('No current music');
     }
 
-    const format = this.currentMusic.format;
-    const byteOffset = timeSeconds * format.sampleRate * format.bitsPerChannel * format.channelsPerFrame / 8;
+    logger.info(`Seek to ${timeSeconds}s`);
 
-    this.audioStream.unpipe(this.audioOutput);
-    this.audioOutput.close();
-    this.audioStream = this.decoder.seek(byteOffset);
-    this.audioOutput = this.createAudioOutput(format, this.device.id);
-    this.audioStream.pipe(this.audioOutput);
-    this.audioOutput.start();
+    try {
+      const format = this.currentMusic.format;
+      const byteOffset = timeSeconds * format.sampleRate * format.bitsPerChannel * format.channelsPerFrame / 8;
+
+      // this.audioStream.unpipe(this.audioOutput);
+      // this.audioOutput.stop();
+      this.audioStream = this.decoder.seek(byteOffset);
+      this.audioOutput = this.createAudioOutput(format, this.device.id);
+      logger.debug(`test: ${this.audioStream.length}`);
+      this.audioStream.pipe(this.audioOutput);
+      this.audioOutput.start();
+
+    } catch (error) {
+      logger.error(error);
+    }
+
+    return this.getState();
   }
 
   stop(): PlayerState {
-    if (this.decoder.isActive()) {
-      logger.debug('Decoder active, stops it');
-      this.decoder.stop();
-    }
-    if (this.audioOutput !== undefined && this.audioOutput.isActive()) {
-      logger.debug('Audio output active, stops it');
-      this.audioOutput.close();
+    try {
+      if (this.decoder.isActive()) {
+        logger.debug('Decoder active, stops it');
+        this.decoder.stop();
+      }
+      if (this.audioOutput !== undefined) {
+        if (this.audioOutput.isActive()) {
+          logger.debug('Audio output active, stops it');
+          this.audioOutput.close();
+        }
+        delete this.audioOutput;
+      }
+    } catch (error) {
+      logger.error(error);
     }
     return this.getState();
   }

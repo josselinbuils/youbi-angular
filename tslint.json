@@ -22,6 +22,7 @@
     ],
     "import-blacklist": [
       true,
+      "lodash-es",
       "rxjs"
     ],
     "import-spacing": true,

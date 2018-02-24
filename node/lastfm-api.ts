@@ -1,6 +1,6 @@
 import * as request from 'request-promise-native';
 
-import { validate } from '../shared/utils';
+import { validate } from '../shared';
 
 import { LASTFM_API_KEY } from './config';
 import { Logger } from './logger';

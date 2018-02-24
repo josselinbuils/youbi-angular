@@ -1,37 +1,60 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnInit } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
 
-import { PlayerState } from '../../../shared/constants';
+import { Music, PlayerState } from '../../../shared';
 
 const ipc = window.require('ipc-promise');
 
+const STATE_UPDATE_INTERVAL = 60000;
+
 @Injectable()
-export class MusicPlayerService {
+export class MusicPlayerService implements OnInit {
+  private music: Music;
   private state: PlayerState;
   private stateSubject: BehaviorSubject<PlayerState> = new BehaviorSubject<PlayerState>(PlayerState.Stopped);
+  private time: number;
+  private timerId: number;
+  private timeSubject: Subject<number> = new Subject<number>();
 
-  constructor() {
-    // setInterval(async () => this.updateState(), 5000);
+  ngOnInit(): void {
+    setInterval(async () => this.updateState(), STATE_UPDATE_INTERVAL);
   }
 
-  onState(): Observable<PlayerState> {
+  onStateChange(): Observable<PlayerState> {
     return this.stateSubject;
+  }
+
+  onProgress(): Observable<number> {
+    return this.timeSubject;
   }
 
   async pause(): Promise<void> {
     if (await this.getState() === PlayerState.Playing) {
       this.setState(await ipc.send('player', 'pause'));
     }
+    if (this.state === PlayerState.Paused) {
+      this.stopTimer();
+    }
   }
 
-  async play(path: string): Promise<void> {
-    this.setState(await ipc.send('player', { name: 'play', args: [path] }));
+  async play(music: Music): Promise<void> {
+    this.setState(await ipc.send('player', { name: 'play', args: [music.path] }));
+
+    if (this.state === PlayerState.Playing) {
+      this.music = music;
+      this.time = 0;
+      this.startTimer();
+    }
   }
 
   async resume(): Promise<void> {
     if (await this.getState() === PlayerState.Paused) {
       this.setState(await ipc.send('player', 'resume'));
+    }
+    if (this.state === PlayerState.Playing) {
+      this.startTimer();
     }
   }
 
@@ -39,6 +62,15 @@ export class MusicPlayerService {
     if (await this.getState() === PlayerState.Playing) {
       this.setState(await ipc.send('player', { name: 'seek', args: [timeSeconds] }));
     }
+    if (this.state === PlayerState.Playing) {
+      this.time = timeSeconds;
+      console.log(`Seeked to ${this.time}s`);
+      this.timeSubject.next(this.time);
+    }
+  }
+
+  async stop(): Promise<void> {
+    this.setState(await ipc.send('player', 'stop'));
   }
 
   private async getState(): Promise<PlayerState> {
@@ -51,6 +83,26 @@ export class MusicPlayerService {
       this.state = state;
       this.stateSubject.next(state);
     }
+  }
+
+  private startTimer(): void {
+    this.timerId = setInterval(async () => {
+      this.time++;
+
+      if (this.time >= this.music.duration) {
+        this.stopTimer();
+        this.time = 0;
+        await this.stop();
+      } else {
+        this.timeSubject.next(this.time);
+      }
+
+    }, 1000);
+  }
+
+  private stopTimer(): void {
+    window.clearInterval(this.timerId);
+    this.timeSubject.next(this.time);
   }
 
   private async updateState(): Promise<void> {

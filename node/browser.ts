@@ -4,9 +4,7 @@ import { lstatSync, pathExistsSync, readdir } from 'fs-extra';
 import * as musicMetadata from 'music-metadata';
 import { join } from 'path';
 
-import { Music } from '../shared/music';
-import { MusicMap } from '../shared/music-map';
-import { validate } from '../shared/utils';
+import { Music, MusicMap, validate } from '../shared';
 
 import { LastfmApi } from './lastfm-api';
 import { Logger } from './logger';
