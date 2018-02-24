@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
-import { Music } from '../shared/music';
-import { MusicListService } from '../shared/music-list.service';
+import { MusicMap } from '../../../shared/music-map';
+import { MusicManagerService } from '../shared/music-manager.service';
 
 @Component({
   selector: 'app-browser',
@@ -11,12 +11,12 @@ import { MusicListService } from '../shared/music-list.service';
 export class BrowserComponent implements OnInit {
 
   currentMusic: any = {};
-  musicList: Music[];
+  musicMap: MusicMap;
 
-  constructor(private musicListService: MusicListService) {}
+  constructor(private musicListService: MusicManagerService) {}
 
   async ngOnInit(): Promise<void> {
-    this.musicList = await this.musicListService.getList();
-    console.log(this.musicList);
+    this.musicMap = await this.musicListService.getMusicMap();
+    console.log(this.musicMap);
   }
 }

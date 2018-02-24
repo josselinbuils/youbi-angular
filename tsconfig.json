@@ -2,6 +2,8 @@
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "module": "es2015",
     "types": [],
     "sourceMap": true,

@@ -109,6 +109,8 @@ export class Player {
     return this.getState();
   }
 
+  private constructor() {}
+
   private createAudioOutput(format: DecodingFormat, deviceId: number): AudioOutput {
     logger.debug(`Creates audio output on device ${deviceId}`);
 

@@ -6,6 +6,8 @@ export interface Music {
   disk: { no: number; of: number };
   duration: number;
   genre: string[];
+  imageUrl?: string;
+  path: string;
   sampleRate: number;
   title: string;
   track: { no: number; of: number };

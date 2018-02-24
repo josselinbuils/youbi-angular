@@ -32,10 +32,6 @@ export class Logger {
     }
   }
 
-  constructor(private tag: string) {
-    this.color = Logger.getInstanceColor();
-  }
-
   debug(...args: any[]): void {
     this.write(LogLevel.Debug, args);
   }
@@ -46,6 +42,10 @@ export class Logger {
 
   error(...args: any[]): void {
     this.write(LogLevel.Error, args);
+  }
+
+  private constructor(private tag: string) {
+    this.color = Logger.getInstanceColor();
   }
 
   private write(level: LogLevel, args: any[]): void {

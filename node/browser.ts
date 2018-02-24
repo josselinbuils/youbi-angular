@@ -4,8 +4,16 @@ import { lstatSync, pathExistsSync, readdir } from 'fs-extra';
 import * as musicMetadata from 'music-metadata';
 import { join } from 'path';
 
+import { Music } from '../shared/music';
+import { MusicMap } from '../shared/music-map';
+import { validate } from '../shared/utils';
+
+import { LastfmApi } from './lastfm-api';
 import { Logger } from './logger';
 
+const UNKNOWN = 'Unknown';
+
+const api = LastfmApi.create();
 const logger = Logger.create('Browser');
 const store = new ElectronStore();
 
@@ -15,20 +23,20 @@ export class Browser {
     return new Browser();
   }
 
-  async getMusicList(folderPath: string): Promise<string[]> {
+  async getMusicList(folderPath: string): Promise<MusicMap> {
     logger.info('Retrieve music list');
 
     if (!pathExistsSync(folderPath)) {
       throw new Error('Invalid path');
     }
 
-    let musics;
+    let musicMap: MusicMap;
 
     console.time('musicList');
 
-    if (store.has('musicList')) {
+    if (!store.has('musicList')) {
       logger.debug('From cache');
-      musics = store.get('musicList').musics;
+      musicMap = store.get('musicList').musicMap;
     } else {
       logger.debug('From file system');
 
@@ -37,17 +45,48 @@ export class Browser {
       const musicPaths = (await this.listMusics(folderPath)).slice(0, 100);
       console.timeEnd('listFiles');
 
-      musics = this.retrieveMetadata(musicPaths);
+      console.time('metadata');
+      const musics = await this.retrieveMetadata(musicPaths);
+      console.timeEnd('metadata');
+
+      musicMap = this.getMap(musics);
+
+      console.time('lastfm');
+      musicMap = await this.addImages(musicMap);
+      console.timeEnd('lastfm');
 
       const md5 = createHash('md5').update(musicPaths.join('')).digest('hex');
-      store.set('musicList', { md5, musics });
+      store.set('musicList', { md5, musicMap });
 
       logger.info('Music list updated');
     }
 
-    console.time('musicList');
+    console.timeEnd('musicList');
 
-    return musics;
+    return musicMap;
+  }
+
+  private constructor() {}
+
+  private getMap(musics: Music[]): MusicMap {
+    const map = {};
+
+    musics.forEach(music => {
+      const artist = validate.string(music.artist) ? music.artist : UNKNOWN;
+      const album = validate.string(music.album) ? music.album : UNKNOWN;
+
+      if (map[artist] === undefined) {
+        map[artist] = {};
+      }
+
+      if (map[album] === undefined) {
+        map[artist][album] = [];
+      }
+
+      map[artist][album].push(music);
+    });
+
+    return map;
   }
 
   private async getMusicInfo(path: string): Promise<any> {
@@ -76,9 +115,32 @@ export class Browser {
     return [path];
   }
 
-  private async retrieveMetadata(musicPaths: string[]): Promise<any[]> {
+  private async addImages(musicMap: MusicMap): Promise<MusicMap> {
+    const promises = [];
+
+    for (const artist in musicMap) {
+      if (musicMap.hasOwnProperty(artist) && artist !== UNKNOWN) {
+        for (const album in musicMap[artist]) {
+          if (musicMap[artist].hasOwnProperty(album) && album !== UNKNOWN) {
+            const promise = api.getAlbumPreview(album, artist)
+              .then(imageUrl => {
+                if (validate.string(imageUrl)) {
+                  musicMap[artist][album].forEach(music => music.imageUrl = imageUrl);
+                }
+              });
+
+            promises.push(promise);
+          }
+        }
+      }
+    }
+
+    await Promise.all(promises);
+    return musicMap;
+  }
+
+  private async retrieveMetadata(musicPaths: string[]): Promise<Music[]> {
     logger.info('Retrieves metadata');
-    console.time('metadata');
 
     const res = [];
     let i = 0;
@@ -93,7 +155,6 @@ export class Browser {
       logger.debug(`${++i}/${musicPaths.length}`);
     }
 
-    console.timeEnd('metadata');
     return res;
   }
 }

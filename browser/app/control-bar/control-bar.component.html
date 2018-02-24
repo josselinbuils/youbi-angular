@@ -13,7 +13,7 @@
       <i class="fa fa-step-backward" aria-hidden="true"></i>
     </div>
     <div class="button play-button" (click)="play()">
-      <i class="fa" [ngClass]="playing ? 'fa-pause-circle' : 'fa-play-circle'" aria-hidden="true"></i>
+      <i class="fa" [ngClass]="state !== playerState.Playing ? 'fa-play-circle' : 'fa-pause-circle'" aria-hidden="true"></i>
     </div>
     <div class="button next-button" (click)="next()">
       <i class="fa fa-step-forward" aria-hidden="true"></i>

@@ -105,6 +105,8 @@ export class Decoder {
     this.audioStream.destroy();
     logger.debug('Decoder stopped');
   }
+
+  private constructor() {}
 }
 
 export interface DecodingFormat {
