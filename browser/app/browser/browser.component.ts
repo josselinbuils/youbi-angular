@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
-import { MusicMap } from '../../../shared/music-map';
-import { MusicManagerService } from '../shared/music-manager.service';
+import { MusicMap } from '../../../shared';
+import { MusicManagerService } from '../shared';
 
 @Component({
   selector: 'app-browser',
@@ -9,14 +9,13 @@ import { MusicManagerService } from '../shared/music-manager.service';
   styleUrls: ['./browser.component.scss'],
 })
 export class BrowserComponent implements OnInit {
-
-  currentMusic: any = {};
   musicMap: MusicMap;
 
-  constructor(private musicListService: MusicManagerService) {}
+  constructor(private musicManagerService: MusicManagerService) {}
 
   async ngOnInit(): Promise<void> {
-    this.musicMap = await this.musicListService.getMusicMap();
+    this.musicMap = await this.musicManagerService.getMusicMap();
+    this.musicManagerService.setActiveMusic(this.musicMap.Adele['19'][0]);
     console.log(this.musicMap);
   }
 }
