@@ -8,7 +8,7 @@ $text-color: lighten($background-color, 80%);
   cursor: default;
 }
 
-:host {
+.control-bar {
   font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
   font-size: .8em;
   overflow: hidden;
@@ -19,6 +19,25 @@ $text-color: lighten($background-color, 80%);
   box-sizing: border-box;
   background: lighten($background-color, 5%);
   border-top: 1px solid darken($background-color, 5%);
+
+  &.seeking .bar, .progress-bar:hover .bar {
+    background: $primary-color;
+  }
+
+  &.seeking .bar:after, .progress-bar:hover .bar:after {
+    content: "";
+    background: $primary-color;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    position: absolute;
+    top: -3px;
+    right: -5px;
+  }
+
+  &.seeking .music-info * {
+    user-select: none !important;
+  }
 
   .bar {
     width: 0;
@@ -65,10 +84,6 @@ $text-color: lighten($background-color, 80%);
     background: white;
     text-align: center;
     color: black;
-  }
-
-  .duration {
-    margin: 0 10px;
   }
 
   .flex {
@@ -119,23 +134,8 @@ $text-color: lighten($background-color, 80%);
 
   .progress-bar {
     margin: 6px 0;
-    padding: 6px 0;
+    padding: 6px 5px;
     flex-grow: 1;
-  }
-
-  .progress-bar:hover .bar, .seeking .bar {
-    background: $primary-color;
-  }
-
-  .progress-bar:hover .bar:after, .seeking .bar:after {
-    content: "";
-    background: $primary-color;
-    width: 10px;
-    height: 10px;
-    border-radius: 5px;
-    position: absolute;
-    top: -3px;
-    right: -5px;
   }
 
   .progress-bar {
@@ -152,10 +152,6 @@ $text-color: lighten($background-color, 80%);
     padding-right: 247px;
   }
 
-  .seeking .music-info {
-    user-select: none;
-  }
-
   .text-ellipsis {
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -170,13 +166,17 @@ $text-color: lighten($background-color, 80%);
     position: relative;
 
     .current-time {
-      margin: 0 10px 0 15px;
+      margin-right: 5px;
     }
 
     .current-time, .duration {
       text-align: center;
       font-size: .8em;
       line-height: 16px;
+    }
+
+    .duration {
+      margin-left: 5px;
     }
   }
 }

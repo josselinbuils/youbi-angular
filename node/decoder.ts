@@ -1,5 +1,5 @@
 import { Asset } from 'av';
-import { Transform } from 'stream';
+import { Readable, Transform } from 'stream';
 import * as through from 'through2';
 
 // Aurora codecs
@@ -10,7 +10,11 @@ import 'mp3';
 import 'ogg.js';
 import 'vorbis.js';
 
+import { delay } from '../shared';
+
 import { Logger } from './logger';
+
+const SEEK_TIMEOUT_MS = 5000;
 
 const logger = Logger.create('Decoder');
 
@@ -37,16 +41,23 @@ export class Decoder {
     return this.asset !== undefined && this.asset.active;
   }
 
-  seek(byteOffset: number): Transform {
+  async seek(byteOffset: number): Promise<Readable> {
     if (this.asset !== undefined && this.asset.decoder !== undefined) {
       logger.debug(`Seek to byte offset ${byteOffset}`);
 
-      const buffer = Buffer
-        .concat(this.bufferList)
-        .slice(byteOffset);
+      const startTime = Date.now();
+      let buffer = Buffer.concat(this.bufferList);
+
+      while (buffer.length < byteOffset) {
+        if ((Date.now() - startTime) > SEEK_TIMEOUT_MS) {
+          throw new Error('Seek timeout reached');
+        }
+        await delay(100);
+        buffer = Buffer.concat(this.bufferList);
+      }
 
       const stream = through();
-      stream.write(buffer);
+      stream.write(buffer.slice(byteOffset));
       this.audioStream.destroy();
       this.audioStream = stream;
 
@@ -54,8 +65,8 @@ export class Decoder {
     }
   }
 
-  async start(path: string): Promise<Transform> {
-    return new Promise<Transform>(resolve => {
+  async start(path: string): Promise<Readable> {
+    return new Promise<Readable>(resolve => {
 
       if (this.isActive()) {
         throw new Error('Decoder active');
@@ -63,20 +74,17 @@ export class Decoder {
 
       logger.debug(`Starts decoding ${path}`);
 
-      const asset = Asset.fromFile(path);
-      this.asset = asset;
+      this.asset = Asset.fromFile(path);
       this.audioStream = through();
       this.bufferList = [];
 
       // Needs to wait for decodeStart event to have asset.decoder defined
       this.asset.on('decodeStart', () => {
         this.asset.decoder.on('data', typedArray => {
-          if (this.asset === asset) {
-            // Converts ArrayBuffer of input TypedArray to Buffer and writes the result into the output stream
-            const buffer = Buffer.from(typedArray.buffer);
-            this.bufferList.push(buffer);
-            this.audioStream.write(buffer);
-          }
+          // Converts ArrayBuffer of input TypedArray to Buffer and writes the result into the output stream
+          const buffer = Buffer.from(typedArray.buffer);
+          this.bufferList.push(buffer);
+          this.audioStream.write(buffer);
         });
         resolve(this.audioStream);
       });

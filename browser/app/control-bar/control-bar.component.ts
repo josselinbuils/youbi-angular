@@ -4,6 +4,8 @@ import * as moment from 'moment';
 import { Music, PlayerState } from '../../../shared';
 import { MusicManagerService, MusicPlayerService } from '../shared';
 
+const THUMB_WIDTH = 10;
+
 @Component({
   selector: 'app-control-bar',
   templateUrl: './control-bar.component.html',
@@ -78,15 +80,18 @@ export class ControlBarComponent implements OnInit {
   prev(): void {}
 
   startSeek(downEvent: MouseEvent): void {
-    const progressBarWidth = this.progressElementRef.nativeElement.clientWidth;
-    const dx: number = downEvent.offsetX - downEvent.clientX;
+    const progressBarElement = this.progressElementRef.nativeElement;
+    const progressBarWidth = parseInt(getComputedStyle(progressBarElement).width, 10);
+    const left = progressBarElement.getBoundingClientRect().left;
     this.seeking = true;
 
     const getTime = (event) => {
       const duration = this.activeMusic.duration;
-      const time = Math.round(((event.clientX as number) + dx) / progressBarWidth * duration);
+      const time = Math.round((event.clientX - left - THUMB_WIDTH / 2) / progressBarWidth * duration);
       return Math.max(Math.min(time, duration - 1), 0);
     };
+
+    this.setCurrentTime(getTime(downEvent));
 
     const cancelMouseMove = this.renderer.listen('window', 'mousemove', (moveEvent: MouseEvent) => {
       this.setCurrentTime(getTime(moveEvent));

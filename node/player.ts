@@ -107,7 +107,7 @@ export class Player {
     try {
       const format = this.currentMusic.format;
       const byteOffset = timeSeconds * format.sampleRate * format.bitsPerChannel * format.channelsPerFrame / 8;
-      this.setAudioStream(this.decoder.seek(byteOffset));
+      this.setAudioStream(await this.decoder.seek(byteOffset));
     } catch (error) {
       logger.error(`Unable to seek: ${error.message}`);
     }
@@ -181,6 +181,9 @@ export class Player {
   }
 
   private setAudioStream(stream: Readable): void {
+    if (this.audioStream !== undefined) {
+      this.audioStream.unpipe(this.audioOutput);
+    }
     this.audioStream = stream;
     this.audioOutput.clear();
     this.audioStream.pipe(this.audioOutput);
