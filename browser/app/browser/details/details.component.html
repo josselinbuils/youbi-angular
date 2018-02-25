@@ -1,0 +1,5 @@
+<div class="details" [ngStyle]="{background: backgroundColor, 'max-height': '300px', width: width + 'px'}">
+  <div *ngFor="let music of album.musics" (click)="play(music)">
+    {{music.title}}
+  </div>
+</div>

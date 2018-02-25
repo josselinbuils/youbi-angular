@@ -16,13 +16,14 @@ $text-color: lighten($background-color, 80%);
     background: $secondary-color;
   }
 
-  div {
+  .item {
     display: inline-block;
     width: 200px;
     height: 200px;
     background-size: contain;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     margin-left: 20px;
+    position: relative;
 
     &.default-preview {
       font-size: 90px;
@@ -34,6 +35,21 @@ $text-color: lighten($background-color, 80%);
       &:before {
         display: table;
         width: 100%;
+      }
+    }
+
+    &.selected .caret {
+      --details-background: $secondary-color;
+
+      &:after {
+        content: '\A';
+        border-style: solid;
+        border-width: 0 10px 15px 10px;
+        border-color: transparent transparent var(--details-background) transparent;
+        position: absolute;
+        left: 50%;
+        margin-left: -8px;
+        bottom: -25px;
       }
     }
   }

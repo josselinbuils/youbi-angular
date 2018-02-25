@@ -1,2 +1,3 @@
-export * from './music-manager.service';
-export * from './music-player.service';
+export { Album } from './album';
+export { MusicManagerService } from './music-manager.service';
+export { MusicPlayerService } from './music-player.service';

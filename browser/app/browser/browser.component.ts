@@ -1,7 +1,8 @@
 import { AfterContentInit, Component, ElementRef, HostListener, OnInit } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 
-import { Music } from '../../../shared';
-import { MusicManagerService, MusicPlayerService } from '../shared';
+import { Music, validate } from '../../../shared';
+import { Album, MusicManagerService, MusicPlayerService } from '../shared';
 
 const ITEM_MARGIN_PX = 20;
 const MAX_ITEMS_BY_ROW = 30;
@@ -15,10 +16,15 @@ const PREFERRED_ITEM_WIDTH_PX = 210;
 })
 export class BrowserComponent implements AfterContentInit, OnInit {
   albums: Album[];
+  albumLines: Album[][];
+  detailsBackground: string;
+  selectedAlbum: Album;
   itemSize: number;
+  itemsByLine: number;
+  lineWidth: number;
   musics: Music[];
 
-  constructor(private hostElementRef: ElementRef, private musicManagerService: MusicManagerService,
+  constructor(public sanitizer: DomSanitizer, private hostElementRef: ElementRef, private musicManagerService: MusicManagerService,
               private musicPlayerService: MusicPlayerService) {}
 
   async play(album: Album): Promise<void> {
@@ -28,7 +34,7 @@ export class BrowserComponent implements AfterContentInit, OnInit {
   }
 
   ngAfterContentInit(): void {
-    this.itemSize = this.computeItemSize();
+    this.computeItemSize();
   }
 
   async ngOnInit(): Promise<void> {
@@ -41,18 +47,39 @@ export class BrowserComponent implements AfterContentInit, OnInit {
       });
     console.log(this.albums);
 
+    this.computeLines();
+
     this.musicManagerService.setActiveMusic(this.musics[0]);
     console.log(this.musics);
   }
 
   @HostListener('window:resize')
   resizeHandler(): void {
-    this.itemSize = this.computeItemSize();
+    const itemsByLine = this.itemsByLine;
+
+    this.computeItemSize();
+
+    if (this.albums !== undefined && (itemsByLine === undefined || this.itemsByLine !== itemsByLine)) {
+      this.computeLines();
+    }
   }
 
-  private computeItemSize(): number {
+  async showDetails(album: Album): Promise<void> {
+    if (this.selectedAlbum !== album) {
+      if (validate.string(album.imageUrl)) {
+        const rgb = await this.getAverageRGB(album.imageUrl);
+        this.detailsBackground = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+      } else {
+        this.detailsBackground = '#293559';
+      }
+      this.selectedAlbum = album;
+    } else {
+      delete this.selectedAlbum;
+    }
+  }
+
+  private computeItemSize(): void {
     const dWidths: number[] = [];
-    let finalWidth: number;
 
     for (let i = MIN_ITEMS_BY_ROW; i <= MAX_ITEMS_BY_ROW; i++) {
       const width = Math.floor((this.hostElementRef.nativeElement.offsetWidth - (i + 1) * ITEM_MARGIN_PX) / i);
@@ -60,11 +87,54 @@ export class BrowserComponent implements AfterContentInit, OnInit {
       dWidths[i] = Math.abs(width - PREFERRED_ITEM_WIDTH_PX);
 
       if (i === MIN_ITEMS_BY_ROW || (width > 0 && dWidths[i] < dWidths[i - 1])) {
-        finalWidth = width;
+        this.itemSize = width;
+        this.itemsByLine = i;
+        this.lineWidth = width * i + (i - 1) * ITEM_MARGIN_PX;
       }
     }
+  }
 
-    return finalWidth;
+  private computeLines(): void {
+    const linesCount = Math.ceil(this.albums.length / this.itemsByLine);
+    this.albumLines = [];
+    for (let i = 0; i < linesCount; i++) {
+      this.albumLines.push(this.albums.slice(i * this.itemsByLine, (i + 1) * this.itemsByLine));
+    }
+  }
+
+  private async getAverageRGB(imageUrl: string): Promise<number[]> {
+
+    const image = await new Promise<HTMLImageElement>(resolve => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.crossOrigin = 'anonymous';
+      img.src = imageUrl;
+    });
+
+    const blockSize = 5; // only visit every 5 pixels
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const rgb = [0, 0, 0];
+
+    canvas.height = image.height;
+    canvas.width = image.width;
+
+    context.drawImage(image, 0, 0);
+
+    const data = context.getImageData(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < data.data.length; i += blockSize * 4) {
+      rgb[0] += data.data[i];
+      rgb[1] += data.data[i + 1];
+      rgb[2] += data.data[i + 2];
+    }
+
+    const count = Math.round(data.data.length / (blockSize * 4));
+    rgb[0] = Math.round(rgb[0] / count);
+    rgb[1] = Math.round(rgb[1] / count);
+    rgb[2] = Math.round(rgb[2] / count);
+
+    return rgb;
   }
 
   private groupBy(array: Array<any>, key: string): { [key: string]: any } {
@@ -76,11 +146,4 @@ export class BrowserComponent implements AfterContentInit, OnInit {
       return map;
     }, {});
   }
-}
-
-interface Album {
-  artist: string;
-  imageUrl: string;
-  musics: Music[];
-  name: string;
 }

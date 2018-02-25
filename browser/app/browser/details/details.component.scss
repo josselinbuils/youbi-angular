@@ -1,0 +1,19 @@
+$background-color: #111625;
+$primary-color: #007ad8;
+$secondary-color: lighten($background-color, 15%);
+$text-color: lighten($background-color, 80%);
+
+@keyframes slide-down {
+  from {
+    max-height: 0;
+  }
+  to {
+    max-height: 300px;
+  }
+}
+
+.details {
+  margin: 0 0 20px 20px;
+  animation: slide-down .1s ease-in-out;
+  max-height: 0;
+}
