@@ -2,7 +2,7 @@ import { Component, ElementRef, OnInit, Renderer2, ViewChild } from '@angular/co
 import * as moment from 'moment';
 
 import { Music, PlayerState } from '../../../shared';
-import { MusicManagerService, MusicPlayerService } from '../shared';
+import { MusicPlayerService } from '../shared';
 
 const THUMB_WIDTH = 10;
 
@@ -25,15 +25,16 @@ export class ControlBarComponent implements OnInit {
   repeat: boolean;
   seeking: boolean;
 
-  constructor(private musicManagerService: MusicManagerService, private musicPlayerService: MusicPlayerService,
-              private renderer: Renderer2) {}
+  constructor(private musicPlayerService: MusicPlayerService, private renderer: Renderer2) {}
 
-  next(): void {}
+  async next(): Promise<void> {
+    await this.musicPlayerService.next();
+  }
 
   ngOnInit(): void {
     this.reset();
 
-    this.musicManagerService
+    this.musicPlayerService
       .onActiveMusicChange()
       .subscribe(music => {
         this.reset();
@@ -72,11 +73,13 @@ export class ControlBarComponent implements OnInit {
         break;
 
       case PlayerState.Stopped:
-        await this.musicPlayerService.play(this.activeMusic);
+        await this.musicPlayerService.play();
     }
   }
 
-  prev(): void {}
+  async prev(): Promise<void> {
+    await this.musicPlayerService.prev();
+  }
 
   startSeek(downEvent: MouseEvent): void {
     const progressBarElement = this.progressElementRef.nativeElement;

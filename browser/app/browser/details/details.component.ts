@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 
 import { Music } from '../../../../shared';
-import { Album, MusicManagerService, MusicPlayerService } from '../../shared';
+import { Album, MusicPlayerService } from '../../shared';
 
 @Component({
   selector: 'app-details',
@@ -13,10 +13,9 @@ export class DetailsComponent {
   @Input() backgroundColor: string;
   @Input() width: number;
 
-  constructor(private musicManagerService: MusicManagerService, private musicPlayerService: MusicPlayerService) {}
+  constructor(private musicPlayerService: MusicPlayerService) {}
 
-  async play(music: Music): Promise<void> {
-    this.musicManagerService.setActiveMusic(music);
-    return this.musicPlayerService.play(music);
+  async play(musics: Music[]): Promise<void> {
+    return this.musicPlayerService.play(musics);
   }
 }

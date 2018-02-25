@@ -8,12 +8,11 @@ $text-color: lighten($background-color, 80%);
     max-height: 0;
   }
   to {
-    max-height: 300px;
+    max-height: 1000px;
   }
 }
 
 .details {
   margin: 0 0 20px 20px;
   animation: slide-down .1s ease-in-out;
-  max-height: 0;
 }

@@ -27,12 +27,6 @@ export class BrowserComponent implements AfterContentInit, OnInit {
   constructor(public sanitizer: DomSanitizer, private hostElementRef: ElementRef, private musicManagerService: MusicManagerService,
               private musicPlayerService: MusicPlayerService) {}
 
-  async play(album: Album): Promise<void> {
-    const music = album.musics[0];
-    this.musicManagerService.setActiveMusic(music);
-    return this.musicPlayerService.play(music);
-  }
-
   ngAfterContentInit(): void {
     this.computeItemSize();
   }
@@ -49,8 +43,7 @@ export class BrowserComponent implements AfterContentInit, OnInit {
 
     this.computeLines();
 
-    this.musicManagerService.setActiveMusic(this.musics[0]);
-    console.log(this.musics);
+    this.musicPlayerService.setPlaylist(this.albums[0].musics);
   }
 
   @HostListener('window:resize')
