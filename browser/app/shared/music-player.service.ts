@@ -67,18 +67,14 @@ export class MusicPlayerService implements OnInit {
     }
   }
 
-  async play(musics?: Music[]): Promise<void> {
+  async play(musics?: Music[], index: number = 0): Promise<void> {
 
-    if (musics === undefined) {
-      if (this.activeMusic !== undefined) {
-        musics = this.playlist.slice(this.playlist.indexOf(this.activeMusic));
-      } else {
-        throw new Error('No playlist');
-      }
+    if (musics === undefined && this.playlist === undefined) {
+      throw new Error('No music to play');
     }
 
     this.setPlaylist(musics);
-    await this.playMusic(this.activeMusic);
+    await this.playMusic(this.playlist[index]);
   }
 
   async prev(): Promise<void> {
@@ -182,7 +178,12 @@ export class MusicPlayerService implements OnInit {
 
       // Should be done in the node player, find a way!
       if (this.time >= (this.activeMusic.duration - 1)) {
-        await this.stop();
+        if (this.playlist.indexOf(this.activeMusic) < (this.playlist.length - 1)) {
+          await this.next();
+        } else {
+          await this.stop();
+          await this.next();
+        }
       } else {
         this.timeSubject.next(this.time);
       }

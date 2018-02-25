@@ -15,7 +15,7 @@ export class DetailsComponent {
 
   constructor(private musicPlayerService: MusicPlayerService) {}
 
-  async play(musics: Music[]): Promise<void> {
-    return this.musicPlayerService.play(musics);
+  async play(musics: Music[], index: number): Promise<void> {
+    return this.musicPlayerService.play(musics, index);
   }
 }
