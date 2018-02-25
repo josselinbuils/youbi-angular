@@ -66,18 +66,26 @@ export class MusicPlayerService implements OnInit {
   async seek(timeSeconds: number): Promise<void> {
     if (await this.getState() === PlayerState.Playing) {
       this.setState(await ipc.send('player', { name: 'seek', args: [timeSeconds] }));
-    }
-    if (this.state === PlayerState.Playing) {
-      this.time = timeSeconds;
-      console.log(`Seeked to ${this.time}s`);
-      this.timeSubject.next(this.time);
+
+      if (this.state === PlayerState.Playing) {
+        console.log(`Seek to ${timeSeconds}s`);
+        this.time = timeSeconds;
+        this.timeSubject.next(this.time);
+      } else {
+        await this.stop();
+      }
+    } else {
+      await this.stop();
     }
   }
 
   async stop(): Promise<void> {
     this.stopTimer();
     this.time = 0;
-    this.setState(await ipc.send('player', 'stop'));
+
+    if (await this.getState() !== PlayerState.Stopped) {
+      this.setState(await ipc.send('player', 'stop'));
+    }
   }
 
   private async getState(): Promise<PlayerState> {
@@ -96,7 +104,8 @@ export class MusicPlayerService implements OnInit {
     this.timerId = setInterval(async () => {
       this.time++;
 
-      if (this.time >= this.music.duration) {
+      // Should be done in the node player, find a way!
+      if (this.time >= (this.music.duration - 1)) {
         await this.stop();
       } else {
         this.timeSubject.next(this.time);

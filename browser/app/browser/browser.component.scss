@@ -23,5 +23,18 @@ $text-color: lighten($background-color, 80%);
     background-size: contain;
     margin-bottom: 20px;
     margin-left: 20px;
+
+    &.default-preview {
+      font-size: 90px;
+      line-height: 200px;
+      background: $secondary-color;
+      text-align: center;
+      color: $text-color;
+
+      &:before {
+        display: table;
+        width: 100%;
+      }
+    }
   }
 }

@@ -79,11 +79,11 @@ $text-color: lighten($background-color, 80%);
   }
 
   .default-preview {
-    font-size: 50px;
+    font-size: 40px;
     line-height: 62px;
-    background: white;
     text-align: center;
-    color: black;
+    background: $secondary-color;
+    color: $text-color;
   }
 
   .flex {

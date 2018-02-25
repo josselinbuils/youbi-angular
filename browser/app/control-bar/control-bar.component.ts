@@ -25,8 +25,7 @@ export class ControlBarComponent implements OnInit {
   repeat: boolean;
   seeking: boolean;
 
-  constructor(private musicManagerService: MusicManagerService,
-              private musicPlayerService: MusicPlayerService,
+  constructor(private musicManagerService: MusicManagerService, private musicPlayerService: MusicPlayerService,
               private renderer: Renderer2) {}
 
   next(): void {}
@@ -91,6 +90,13 @@ export class ControlBarComponent implements OnInit {
       return Math.max(Math.min(time, duration - 1), 0);
     };
 
+    // When decoding is in progress, we need to wait for musicPlayerService.seek to answer before setting seeking to false to avoid having
+    // progressbar moving until seek is done
+    const seek = async (time: number) => {
+      await this.musicPlayerService.seek(time);
+      this.seeking = false;
+    };
+
     this.setCurrentTime(getTime(downEvent));
 
     const cancelMouseMove = this.renderer.listen('window', 'mousemove', (moveEvent: MouseEvent) => {
@@ -98,10 +104,9 @@ export class ControlBarComponent implements OnInit {
     });
 
     const cancelMouseUp = this.renderer.listen('window', 'mouseup', (upEvent: MouseEvent) => {
-      this.seeking = false;
       cancelMouseMove();
       cancelMouseUp();
-      return this.musicPlayerService.seek(getTime(upEvent)) as any;
+      return seek(getTime(upEvent)) as any;
     });
   }
 

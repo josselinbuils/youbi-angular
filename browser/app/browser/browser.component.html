@@ -1,2 +1,3 @@
-<div *ngFor="let album of albums" [ngStyle]="{'background-image': 'url(' + album.imageUrl + ')'}"
+<div *ngFor="let album of albums" [ngClass]="{'default-preview fa fa-music': !album.imageUrl}"
+     [ngStyle]="{'background-image': 'url(' + album.imageUrl + ')', width: itemSize + 'px', height: itemSize + 'px'}"
      (click)="play(album)"></div>
