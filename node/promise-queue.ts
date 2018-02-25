@@ -11,7 +11,7 @@ export class PromiseQueue {
     return new PromiseQueue(maxConcurrent);
   }
 
-  enqueue(handler: () => Promise<any>): Promise<any> {
+  async enqueue(handler: () => Promise<any>): Promise<any> {
     const deferred = Deferred.create();
     const element = { deferred, handler };
 

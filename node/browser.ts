@@ -4,15 +4,13 @@ import { lstatSync, pathExistsSync, readdir } from 'fs-extra';
 import * as musicMetadata from 'music-metadata';
 import { join } from 'path';
 
-import { Music, MusicMap, validate } from '../shared';
+import { Music, validate } from '../shared';
 
 import { LastfmApi } from './lastfm-api';
 import { Logger } from './logger';
 
-const UNKNOWN = 'Unknown';
-
-const api = LastfmApi.create();
 const logger = Logger.create('Browser');
+const previewApi = LastfmApi.create();
 const store = new ElectronStore();
 
 export class Browser {
@@ -21,71 +19,49 @@ export class Browser {
     return new Browser();
   }
 
-  async getMusicList(folderPath: string): Promise<MusicMap> {
+  async getMusicList(folderPath: string): Promise<Music[]> {
     logger.info('Retrieve music list');
 
     if (!pathExistsSync(folderPath)) {
       throw new Error('Invalid path');
     }
 
-    let musicMap: MusicMap;
+    let musics: Music[];
 
     console.time('musicList');
 
     if (store.has('musicList')) {
       logger.debug('From cache');
-      musicMap = store.get('musicList').musicMap;
+      const musicList = store.get('musicList');
+      musics = musicList.musics;
     } else {
       logger.debug('From file system');
 
       logger.info(`Lists musics from ${folderPath}`);
       console.time('listFiles');
-      const musicPaths = (await this.listMusics(folderPath)).slice(0, 100);
+      const musicPaths = (await this.listMusics(folderPath));
       console.timeEnd('listFiles');
 
       console.time('metadata');
-      const musics = await this.retrieveMetadata(musicPaths);
+      musics = await this.retrieveMetadata(musicPaths);
       console.timeEnd('metadata');
 
-      musicMap = this.getMap(musics);
-
       console.time('lastfm');
-      musicMap = await this.addImages(musicMap);
+      musics = await this.addImages(musics);
       console.timeEnd('lastfm');
 
       const md5 = createHash('md5').update(musicPaths.join('')).digest('hex');
-      store.set('musicList', { md5, musicMap });
+      store.set('musicList', { md5, musics });
 
       logger.info('Music list updated');
     }
 
     console.timeEnd('musicList');
 
-    return musicMap;
+    return musics;
   }
 
   private constructor() {}
-
-  private getMap(musics: Music[]): MusicMap {
-    const map = {};
-
-    musics.forEach(music => {
-      const artist = validate.string(music.artist) ? music.artist : UNKNOWN;
-      const album = validate.string(music.album) ? music.album : UNKNOWN;
-
-      if (map[artist] === undefined) {
-        map[artist] = {};
-      }
-
-      if (map[album] === undefined) {
-        map[artist][album] = [];
-      }
-
-      map[artist][album].push(music);
-    });
-
-    return map;
-  }
 
   private async getMusicInfo(path: string): Promise<any> {
     const { common, format } = await musicMetadata.parseFile(path);
@@ -113,28 +89,28 @@ export class Browser {
     return [path];
   }
 
-  private async addImages(musicMap: MusicMap): Promise<MusicMap> {
+  private async addImages(musics: Music[]): Promise<Music[]> {
     const promises = [];
+    let i = 0;
 
-    for (const artist in musicMap) {
-      if (musicMap.hasOwnProperty(artist) && artist !== UNKNOWN) {
-        for (const album in musicMap[artist]) {
-          if (musicMap[artist].hasOwnProperty(album) && album !== UNKNOWN) {
-            const promise = api.getAlbumPreview(album, artist)
-              .then(imageUrl => {
-                if (validate.string(imageUrl)) {
-                  musicMap[artist][album].forEach(music => music.imageUrl = imageUrl);
-                }
-              });
+    const musicToAdd = musics.filter(music => !validate.string(music.imageUrl));
 
-            promises.push(promise);
+    for (const music of musicToAdd) {
+      const promise = previewApi.getPreview(music)
+        .then(imageUrl => {
+          logger.debug(`addImages: ${++i}/${musicToAdd.length} ${imageUrl}`);
+
+          if (validate.string(imageUrl)) {
+            music.imageUrl = imageUrl;
           }
-        }
-      }
+        })
+        .catch(logger.error);
+
+      promises.push(promise);
     }
 
     await Promise.all(promises);
-    return musicMap;
+    return musics;
   }
 
   private async retrieveMetadata(musicPaths: string[]): Promise<Music[]> {
@@ -150,7 +126,7 @@ export class Browser {
       } catch (error) {
         logger.error(path, error);
       }
-      logger.debug(`${++i}/${musicPaths.length}`);
+      logger.debug(`retrieveMetadata: ${++i}/${musicPaths.length}`);
     }
 
     return res;

@@ -1,10 +1,13 @@
 import { pathExistsSync } from 'fs-extra';
 import { AudioOutput, getDevices } from 'naudiodon';
+import { Readable } from 'stream';
 
-import { PlayerState } from '../shared';
+import { delay, PlayerState } from '../shared';
 
 import { Decoder, DecodingFormat } from './decoder';
 import { Logger } from './logger';
+
+const AUDIO_OUTPUT_RETRIES = 2;
 
 const logger = Logger.create('Player');
 
@@ -12,7 +15,7 @@ export class Player {
 
   private audioOutput: AudioOutput;
   private audioStream;
-  private currentMusic?: { format: DecodingFormat; durationSeconds: number };
+  private currentMusic?: { format: DecodingFormat };
   private decoder = Decoder.create();
   private device: { id: number };
 
@@ -21,13 +24,19 @@ export class Player {
   }
 
   getState(): PlayerState {
-    if (this.audioOutput === undefined) {
+    try {
+      if (this.audioOutput !== undefined) {
+        if (this.audioOutput.isActive()) {
+          return PlayerState.Playing;
+        }
+        if (this.decoder.isActive() && this.audioOutput.isStopped()) {
+          return PlayerState.Paused;
+        }
+      }
       return PlayerState.Stopped;
-    } else if (this.audioOutput.isActive()) {
-      return PlayerState.Playing;
-    } else if (this.audioOutput.isStopped()) {
-      return PlayerState.Paused;
-    } else {
+
+    } catch (error) {
+      logger.error(`Unable to retrieve player state: ${error.message}`);
       return PlayerState.Stopped;
     }
   }
@@ -58,22 +67,18 @@ export class Player {
       this.stop();
 
       const format = await this.decoder.get('format', path) as DecodingFormat;
-      const durationSeconds = Math.round((await this.decoder.get('duration', path) as number) / 1000);
-      this.currentMusic = { durationSeconds, format };
+      this.currentMusic = { format };
 
       logger.debug(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}Hz`);
 
-      this.audioOutput = this.createAudioOutput(format, this.device.id);
-      this.audioStream = await this.decoder.start(path);
-
-      logger.debug('Links stream to audio output');
-      this.audioStream.pipe(this.audioOutput);
-
-      logger.debug('Starts audio output');
+      this.audioOutput = this.getAudioOutput(format, this.device.id);
+      this.setAudioStream(await this.decoder.start(path));
+      // Delay needed to fill enough the audio stream before starting reading it, check should be done by the lib
+      await delay(1);
       this.audioOutput.start();
 
     } catch (error) {
-      logger.error(error);
+      logger.error(`Unable to play: ${error.message}`);
     }
 
     return this.getState();
@@ -85,34 +90,26 @@ export class Player {
       try {
         this.audioOutput.start();
       } catch (error) {
+        logger.error(`Unable to resume: ${error.message}`);
         logger.error(error);
       }
     }
     return this.getState();
   }
 
-  seek(timeSeconds: number): PlayerState {
+  async seek(timeSeconds: number): Promise<PlayerState> {
 
     if (this.currentMusic === undefined) {
       throw new Error('No current music');
     }
 
     logger.info(`Seek to ${timeSeconds}s`);
-
     try {
       const format = this.currentMusic.format;
       const byteOffset = timeSeconds * format.sampleRate * format.bitsPerChannel * format.channelsPerFrame / 8;
-
-      // this.audioStream.unpipe(this.audioOutput);
-      // this.audioOutput.stop();
-      this.audioStream = this.decoder.seek(byteOffset);
-      this.audioOutput = this.createAudioOutput(format, this.device.id);
-      logger.debug(`test: ${this.audioStream.length}`);
-      this.audioStream.pipe(this.audioOutput);
-      this.audioOutput.start();
-
+      this.setAudioStream(this.decoder.seek(byteOffset));
     } catch (error) {
-      logger.error(error);
+      logger.error(`Unable to seek: ${error.message}`);
     }
 
     return this.getState();
@@ -124,33 +121,68 @@ export class Player {
         logger.debug('Decoder active, stops it');
         this.decoder.stop();
       }
-      if (this.audioOutput !== undefined) {
-        if (this.audioOutput.isActive()) {
-          logger.debug('Audio output active, stops it');
-          this.audioOutput.close();
-        }
-        delete this.audioOutput;
+      if (this.audioOutput !== undefined && this.audioOutput.isActive()) {
+        logger.debug('Audio output active, stops it');
+        this.audioOutput.stop();
       }
     } catch (error) {
-      logger.error(error);
+      logger.error(`Unable to stop: ${error.message}`);
     }
     return this.getState();
   }
 
   private constructor() {}
 
-  private createAudioOutput(format: DecodingFormat, deviceId: number): AudioOutput {
-    logger.debug(`Creates audio output on device ${deviceId}`);
+  private getAudioOutput(format: DecodingFormat, deviceId: number, retries: number = AUDIO_OUTPUT_RETRIES): AudioOutput {
+    // deviceId = -1;
 
-    const audioOutput = new AudioOutput({
+    const options = {
       channelCount: format.channelsPerFrame,
       sampleFormat: format.bitsPerChannel,
       sampleRate: format.sampleRate,
-      deviceId: -1,
-    });
+      deviceId,
+    };
 
-    audioOutput.on('finish', () => logger.debug('Audio output stopped'));
+    if (this.audioOutput !== undefined) {
+      if (JSON.stringify(options) === JSON.stringify(this.audioOutput.options)) {
+        logger.debug('Uses existing audio output');
+        return this.audioOutput;
+      } else {
+        logger.debug('Closes existing audio output');
+        this.audioOutput.close();
+        delete this.audioOutput;
+      }
+    }
 
-    return audioOutput;
+    let audioOutput: AudioOutput;
+    try {
+      logger.debug(`Creates audio output on device ${deviceId}`);
+
+      audioOutput = new AudioOutput({
+        channelCount: format.channelsPerFrame,
+        sampleFormat: format.bitsPerChannel,
+        sampleRate: format.sampleRate,
+        deviceId,
+      });
+
+      audioOutput.on('finish', () => logger.debug('Audio output stopped'));
+      return audioOutput;
+
+    } catch (error) {
+      logger.error(`Unable to create audio output: ${error.message}`);
+
+      if (retries > 0) {
+        logger.debug(`Retry ${ AUDIO_OUTPUT_RETRIES - retries + 1}/${AUDIO_OUTPUT_RETRIES}`);
+        return this.getAudioOutput(format, deviceId, retries - 1);
+      } else {
+        throw Error('Unable to create audio output');
+      }
+    }
+  }
+
+  private setAudioStream(stream: Readable): void {
+    this.audioStream = stream;
+    this.audioOutput.clear();
+    this.audioStream.pipe(this.audioOutput);
   }
 }

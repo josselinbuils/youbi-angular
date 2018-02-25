@@ -81,17 +81,18 @@ $text-color: lighten($background-color, 80%);
 
   .music-info {
     @extend .text-ellipsis;
-    flex: 0 0 20ch;
+    flex: 0 0 158px;
     height: 62px;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-    margin-left: 15px;
+    margin-left: 12px;
     overflow: hidden;
 
     .name, .artist {
       @extend .text-ellipsis;
       user-select: text;
+      margin-top: 5px;
     }
 
     .artist {
@@ -104,7 +105,7 @@ $text-color: lighten($background-color, 80%);
     height: 62px;
     background-repeat: no-repeat;
     background-size: 62px;
-    margin-left: 15px;
+    margin-left: 10px;
   }
 
   .play-button {
@@ -137,25 +138,6 @@ $text-color: lighten($background-color, 80%);
     right: -5px;
   }
 
-  .overflow {
-    overflow-y: auto;
-    overflow-x: hidden;
-    flex-grow: 1;
-
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: $secondary-color;
-      border-radius: 5px;
-    }
-
-    &::-webkit-scrollbar-track {
-      border-radius: 5px;
-    }
-  }
-
   .progress-bar {
     margin: 0;
   }
@@ -167,6 +149,7 @@ $text-color: lighten($background-color, 80%);
 
   .right {
     flex-grow: 1;
+    padding-right: 247px;
   }
 
   .seeking .music-info {

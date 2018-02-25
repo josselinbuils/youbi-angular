@@ -79,12 +79,12 @@ export class ControlBarComponent implements OnInit {
 
   startSeek(downEvent: MouseEvent): void {
     const progressBarWidth = this.progressElementRef.nativeElement.clientWidth;
-    const dx = downEvent.offsetX - downEvent.clientX;
+    const dx: number = downEvent.offsetX - downEvent.clientX;
     this.seeking = true;
 
     const getTime = (event) => {
       const duration = this.activeMusic.duration;
-      const time = Math.round((event.clientX + dx) / progressBarWidth * duration);
+      const time = Math.round(((event.clientX as number) + dx) / progressBarWidth * duration);
       return Math.max(Math.min(time, duration - 1), 0);
     };
 
@@ -96,7 +96,7 @@ export class ControlBarComponent implements OnInit {
       this.seeking = false;
       cancelMouseMove();
       cancelMouseUp();
-      this.musicPlayerService.seek(getTime(upEvent));
+      return this.musicPlayerService.seek(getTime(upEvent)) as any;
     });
   }
 

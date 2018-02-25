@@ -1,3 +1,27 @@
+$background-color: #111625;
+$primary-color: #007ad8;
+$secondary-color: lighten($background-color, 15%);
+$text-color: lighten($background-color, 80%);
+
 :host {
   display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  &::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $secondary-color;
+  }
+
+  div {
+    display: inline-block;
+    width: 200px;
+    height: 200px;
+    background-size: contain;
+    margin-bottom: 20px;
+    margin-left: 20px;
+  }
 }

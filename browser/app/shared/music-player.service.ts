@@ -40,6 +40,11 @@ export class MusicPlayerService implements OnInit {
   }
 
   async play(music: Music): Promise<void> {
+
+    if (await this.getState() === PlayerState.Playing) {
+      await this.stop();
+    }
+
     this.setState(await ipc.send('player', { name: 'play', args: [music.path] }));
 
     if (this.state === PlayerState.Playing) {
@@ -70,6 +75,8 @@ export class MusicPlayerService implements OnInit {
   }
 
   async stop(): Promise<void> {
+    this.stopTimer();
+    this.time = 0;
     this.setState(await ipc.send('player', 'stop'));
   }
 
@@ -90,8 +97,6 @@ export class MusicPlayerService implements OnInit {
       this.time++;
 
       if (this.time >= this.music.duration) {
-        this.stopTimer();
-        this.time = 0;
         await this.stop();
       } else {
         this.timeSubject.next(this.time);

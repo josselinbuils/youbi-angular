@@ -5,8 +5,8 @@ export class Deferred {
     return new Deferred();
   }
 
-  resolve: () => void = () => {};
-  reject: () => void = () => {};
+  resolve: (...args: any[]) => void = () => {};
+  reject: (...args: any[]) => void = () => {};
 
   constructor() {
     this.promise = new Promise((resolve, reject) => {

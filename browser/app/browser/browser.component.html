@@ -1,0 +1,2 @@
+<div *ngFor="let album of albums" [ngStyle]="{'background-image': 'url(' + album.imageUrl + ')'}"
+     (click)="play(album)"></div>
