@@ -1,5 +1,11 @@
-<div class="details" [ngStyle]="{background: backgroundColor, width: width + 'px'}">
-  <div *ngFor="let music of album.musics; let i = index" (click)="play(album.musics, i)">
-    {{music.title}}
+<div #details class="details" [ngStyle]="{background: backgroundStyle, width: width + 'px'}">
+  <div *ngFor="let column of columns" class="column">
+    <div *ngFor="let music of column" [ngClass]="{selected: music === selected}" class="music"
+         [ngStyle]="{background: music === selected ? selectedBackgroundStyle : 'none', color: music === selected ? selectedTextStyle : textStyle }"
+         (click)="select(music)" (dblclick)="play(currentAlbum.musics, currentAlbum.musics.indexOf(music))">
+      <span class="number">{{music.track.no}}</span>
+      <span class="title">{{music.title}}</span>
+      <span class="duration">{{music.readableDuration}}</span>
+    </div>
   </div>
 </div>

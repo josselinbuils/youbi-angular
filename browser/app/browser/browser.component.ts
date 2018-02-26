@@ -1,13 +1,17 @@
 import { AfterContentInit, Component, ElementRef, HostListener, OnInit } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
+import * as ColorThief from 'color-thief-browser';
 
 import { Music, validate } from '../../../shared';
 import { Album, MusicManagerService, MusicPlayerService } from '../shared';
+import { computeItemSize } from '../shared/utils';
 
 const ITEM_MARGIN_PX = 20;
 const MAX_ITEMS_BY_ROW = 30;
 const MIN_ITEMS_BY_ROW = 4;
-const PREFERRED_ITEM_WIDTH_PX = 210;
+const PREFERRED_ITEM_WIDTH_PX = 200;
+
+const colorThief = new ColorThief();
 
 @Component({
   selector: 'app-browser',
@@ -17,7 +21,7 @@ const PREFERRED_ITEM_WIDTH_PX = 210;
 export class BrowserComponent implements AfterContentInit, OnInit {
   albums: Album[];
   albumLines: Album[][];
-  detailsBackground: string;
+  colorPalette: string[];
   selectedAlbum: Album;
   itemSize: number;
   itemsByLine: number;
@@ -59,12 +63,9 @@ export class BrowserComponent implements AfterContentInit, OnInit {
 
   async showDetails(album: Album): Promise<void> {
     if (this.selectedAlbum !== album) {
-      if (validate.string(album.imageUrl)) {
-        const rgb = await this.getAverageRGB(album.imageUrl);
-        this.detailsBackground = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-      } else {
-        this.detailsBackground = '#293559';
-      }
+      this.colorPalette = validate.string(album.imageUrl)
+        ? (await this.getColorPalette(album.imageUrl)).map(rgb => `rgb(${rgb.join(', ')})`)
+        : ['#293559', '#dee3f0'];
       this.selectedAlbum = album;
     } else {
       delete this.selectedAlbum;
@@ -72,19 +73,12 @@ export class BrowserComponent implements AfterContentInit, OnInit {
   }
 
   private computeItemSize(): void {
-    const dWidths: number[] = [];
-
-    for (let i = MIN_ITEMS_BY_ROW; i <= MAX_ITEMS_BY_ROW; i++) {
-      const width = Math.floor((this.hostElementRef.nativeElement.offsetWidth - (i + 1) * ITEM_MARGIN_PX) / i);
-
-      dWidths[i] = Math.abs(width - PREFERRED_ITEM_WIDTH_PX);
-
-      if (i === MIN_ITEMS_BY_ROW || (width > 0 && dWidths[i] < dWidths[i - 1])) {
-        this.itemSize = width;
-        this.itemsByLine = i;
-        this.lineWidth = width * i + (i - 1) * ITEM_MARGIN_PX;
-      }
-    }
+    const res = computeItemSize(
+      this.hostElementRef.nativeElement.offsetWidth, ITEM_MARGIN_PX, PREFERRED_ITEM_WIDTH_PX, MIN_ITEMS_BY_ROW, MAX_ITEMS_BY_ROW,
+    );
+    this.itemSize = res.itemSize;
+    this.itemsByLine = res.itemsByLine;
+    this.lineWidth = res.lineWidth;
   }
 
   private computeLines(): void {
@@ -95,39 +89,13 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     }
   }
 
-  private async getAverageRGB(imageUrl: string): Promise<number[]> {
-
-    const image = await new Promise<HTMLImageElement>(resolve => {
+  private async getColorPalette(imageUrl: string): Promise<number[][]> {
+    return new Promise<number[][]>(resolve => {
       const img = new Image();
-      img.onload = () => resolve(img);
+      img.onload = () => resolve(colorThief.getPalette(img, 2));
       img.crossOrigin = 'anonymous';
       img.src = imageUrl;
     });
-
-    const blockSize = 5; // only visit every 5 pixels
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    const rgb = [0, 0, 0];
-
-    canvas.height = image.height;
-    canvas.width = image.width;
-
-    context.drawImage(image, 0, 0);
-
-    const data = context.getImageData(0, 0, canvas.width, canvas.height);
-
-    for (let i = 0; i < data.data.length; i += blockSize * 4) {
-      rgb[0] += data.data[i];
-      rgb[1] += data.data[i + 1];
-      rgb[2] += data.data[i + 2];
-    }
-
-    const count = Math.round(data.data.length / (blockSize * 4));
-    rgb[0] = Math.round(rgb[0] / count);
-    rgb[1] = Math.round(rgb[1] / count);
-    rgb[2] = Math.round(rgb[2] / count);
-
-    return rgb;
   }
 
   private groupBy(array: Array<any>, key: string): { [key: string]: any } {

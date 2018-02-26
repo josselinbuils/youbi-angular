@@ -3,9 +3,9 @@
        [ngClass]="{'default-preview fa fa-music': !album.imageUrl, 'selected': album === selectedAlbum}"
        [ngStyle]="{'background-image': 'url(' + album.imageUrl + ')', 'width': itemSize + 'px', 'height': itemSize + 'px'}"
        (click)="showDetails(album)">
-    <div [attr.style]="sanitizer.bypassSecurityTrustStyle('--details-background: ' + detailsBackground)"
-         class="caret"></div>
+    <div [attr.style]="sanitizer.bypassSecurityTrustStyle('--details-background: ' + colorPalette[0])"
+         *ngIf="album === selectedAlbum" class="caret"></div>
   </div>
-  <app-details *ngIf="line.includes(selectedAlbum)" [album]="selectedAlbum" [backgroundColor]="detailsBackground"
+  <app-details *ngIf="line.includes(selectedAlbum)" [album]="selectedAlbum" [colorPalette]="colorPalette"
                [width]="lineWidth"></app-details>
 </div>

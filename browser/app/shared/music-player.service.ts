@@ -173,7 +173,7 @@ export class MusicPlayerService implements OnInit {
   }
 
   private startTimer(): void {
-    this.timerId = setInterval(async () => {
+    this.timerId = window.setInterval(async () => {
       this.time++;
 
       // Should be done in the node player, find a way!

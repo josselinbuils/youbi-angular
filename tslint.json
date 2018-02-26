@@ -216,7 +216,8 @@
     "variable-name": [
       true,
       "ban-keywords",
-      "check-format"
+      "check-format",
+      "allow-pascal-case"
     ],
     "whitespace": [
       true,

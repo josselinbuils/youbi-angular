@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import * as ElectronStore from 'electron-store';
 import { lstatSync, pathExistsSync, readdir } from 'fs-extra';
+import * as moment from 'moment';
 import * as musicMetadata from 'music-metadata';
 import { join } from 'path';
 
@@ -39,7 +40,7 @@ export class Browser {
 
       logger.info(`Lists musics from ${folderPath}`);
       console.time('listFiles');
-      const musicPaths = (await this.listMusics(folderPath));
+      const musicPaths = (await this.listMusics(folderPath)).slice(0, 100);
       console.timeEnd('listFiles');
 
       console.time('metadata');
@@ -122,7 +123,8 @@ export class Browser {
     for (const path of musicPaths) {
       try {
         const metadata = await this.getMusicInfo(path);
-        res.push({ path, ...metadata });
+        const readableDuration = moment.utc(metadata.duration * 1000).format('mm:ss');
+        res.push({ path, ...metadata, readableDuration });
       } catch (error) {
         logger.error(path, error);
       }

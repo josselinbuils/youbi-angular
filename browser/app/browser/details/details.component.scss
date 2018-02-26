@@ -12,7 +12,47 @@ $text-color: lighten($background-color, 80%);
   }
 }
 
+* {
+  user-select: none;
+}
+
 .details {
+  font-size: .8em;
   margin: 0 0 20px 20px;
+  padding: 25px 0;
+  box-sizing: border-box;
+  cursor: default;
+  display: flex;
+  justify-content: space-between;
   animation: slide-down .1s ease-in-out;
+
+  .column {
+    flex-grow: 1;
+    max-width: 400px;
+    margin: 0 30px;
+
+    .music {
+      padding: 4px 10px;
+      border-radius: 3px;
+
+      .duration {
+        float: right;
+      }
+
+      .number {
+        display: inline-block;
+        width: 3ch;
+        vertical-align: top;
+      }
+
+      .title {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        max-width: 300px;
+        display: inline-block;
+        vertical-align: top;
+      }
+    }
+  }
 }
