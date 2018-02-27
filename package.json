@@ -44,7 +44,7 @@
     "request": "^2.83.0",
     "request-promise-native": "^1.0.5",
     "rxjs": "^5.5.6",
-    "sanitize-filename": "^1.6.1",
+    "sharp": "^0.19.1",
     "through2": "^2.0.3",
     "vorbis.js": "^0.1.1",
     "zone.js": "^0.8.20"

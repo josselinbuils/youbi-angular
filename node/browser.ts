@@ -1,9 +1,10 @@
 import { createHash } from 'crypto';
 import * as ElectronStore from 'electron-store';
-import { lstatSync, outputFileSync, pathExistsSync, readdir } from 'fs-extra';
+import { lstatSync, pathExistsSync, readdir } from 'fs-extra';
 import * as moment from 'moment';
 import * as musicMetadata from 'music-metadata';
 import { join } from 'path';
+import * as sharp from 'sharp';
 
 import { COVERS_FOLDER, Music, validate } from '../shared';
 
@@ -109,12 +110,14 @@ export class Browser {
       if (picture !== undefined && picture[0] !== undefined) {
         try {
           const coversPath = join(Main.getAppDataPath(), COVERS_FOLDER);
-          const coverName = `${music.artist} ${music.album} ${music.year}`;
-          const coverFileName = `${coverName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${picture[0].format}`;
+          const coverFileName = `${music.path.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.webp`;
           const coverPath = join(coversPath, coverFileName);
 
           if (!pathExistsSync(coverPath)) {
-            outputFileSync(coverPath, picture[0].data, 'binary');
+            await sharp(picture[0].data)
+              .resize(220)
+              .webp({quality: 100})
+              .toFile(coverPath);
           }
 
           music.imageUrl = `file:///${coverPath.replace(/\\/g, '/')}`;
