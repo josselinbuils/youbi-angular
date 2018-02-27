@@ -39,10 +39,15 @@ $text-color: lighten($background-color, 80%);
         float: right;
       }
 
-      .number {
+      .number, .playing {
         display: inline-block;
-        width: 3ch;
+        width: 25px;
         vertical-align: top;
+      }
+
+      .playing {
+        font-size: 19px;
+        vertical-align: middle;
       }
 
       .title {

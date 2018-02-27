@@ -1,6 +1,6 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 
-import { Music } from '../../../../shared';
+import { Music, PlayerState } from '../../../../shared';
 import { Album, MusicPlayerService } from '../../shared';
 import { computeItemSize } from '../../shared/utils';
 
@@ -14,7 +14,7 @@ const PREFERRED_COLUMN_WIDTH_PX = 400;
   templateUrl: './details.component.html',
   styleUrls: ['./details.component.scss'],
 })
-export class DetailsComponent {
+export class DetailsComponent implements OnInit {
   @Input() set album(album: Album) {
     this.currentAlbum = album;
     this.computeColumns(album.musics);
@@ -31,15 +31,20 @@ export class DetailsComponent {
 
   @ViewChild('details') detailsElementRef: ElementRef;
 
+  activeMusic: Music;
   backgroundStyle: string;
   columns: Music[][];
   currentAlbum: Album;
   selected: Music;
   selectedBackgroundStyle: string;
   selectedTextStyle: string;
+  playerState: PlayerState;
+  PlayerState = PlayerState;
   textStyle: string;
 
-  constructor(private musicPlayerService: MusicPlayerService) {}
+  constructor(private musicPlayerService: MusicPlayerService) {
+    this.activeMusic = musicPlayerService.getActiveMusic();
+  }
 
   computeColumns(musics: Music[]): void {
     const style = window.getComputedStyle(this.detailsElementRef.nativeElement);
@@ -56,8 +61,16 @@ export class DetailsComponent {
       this.columns.push(musics.slice(start, start + musicsByColumn));
       start += musicsByColumn;
     }
+  }
 
-    console.log(musics.length, itemsByLine, this.columns, musicsByColumn);
+  ngOnInit(): void {
+    this.musicPlayerService
+      .onActiveMusicChange()
+      .subscribe(music => this.activeMusic = music);
+
+    this.musicPlayerService
+      .onStateChange()
+      .subscribe(state => this.playerState = state);
   }
 
   async play(musics: Music[], index: number): Promise<void> {

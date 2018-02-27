@@ -3,7 +3,10 @@
     <div *ngFor="let music of column" [ngClass]="{selected: music === selected}" class="music"
          [ngStyle]="{background: music === selected ? selectedBackgroundStyle : 'none', color: music === selected ? selectedTextStyle : textStyle }"
          (click)="select(music)" (dblclick)="play(currentAlbum.musics, currentAlbum.musics.indexOf(music))">
-      <span class="number">{{music.track.no}}</span>
+      <span *ngIf="music !== activeMusic || playerState !== PlayerState.Playing"
+            class="number">{{music.track.no}}</span>
+      <i *ngIf="music === activeMusic && playerState === PlayerState.Playing" class="playing fa fa-volume-down"
+         aria-hidden="true"></i>
       <span class="title">{{music.title}}</span>
       <span class="duration">{{music.readableDuration}}</span>
     </div>

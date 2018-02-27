@@ -21,6 +21,10 @@ export class MusicPlayerService implements OnInit {
   private timerId: number;
   private timeSubject: Subject<number> = new Subject<number>();
 
+  getActiveMusic(): Music {
+    return this.activeMusic;
+  }
+
   ngOnInit(): void {
     setInterval(async () => this.updateState(), STATE_UPDATE_INTERVAL);
   }
@@ -68,12 +72,11 @@ export class MusicPlayerService implements OnInit {
   }
 
   async play(musics?: Music[], index: number = 0): Promise<void> {
-
-    if (musics === undefined && this.playlist === undefined) {
+    if (musics !== undefined) {
+      this.setPlaylist(musics);
+    } else if (this.playlist === undefined) {
       throw new Error('No music to play');
     }
-
-    this.setPlaylist(musics);
     await this.playMusic(this.playlist[index]);
   }
 

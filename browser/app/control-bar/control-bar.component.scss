@@ -53,28 +53,42 @@ $text-color: lighten($background-color, 80%);
     border-radius: 2px;
   }
 
-  .button {
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: 25px;
-    margin-right: 25px;
-  }
-
-  .button + .button {
-    margin-left: 0;
-  }
-
-  .button:hover {
-    color: lighten($text-color, 15%);
-  }
-
-  .button:active, .button.checked {
-    color: $primary-color;
-  }
-
   .controls {
     margin-right: 24px;
     text-align: center;
+
+    .button {
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 25px;
+      margin-right: 25px;
+    }
+
+    .button + .button {
+      margin-left: 0;
+    }
+
+    .button:hover {
+      color: lighten($text-color, 15%);
+    }
+
+    .button:active, .button.checked {
+      color: $primary-color;
+    }
+
+    .play-button {
+      font-size: 35px;
+      line-height: 42px;
+    }
+
+    .prev-button, .next-button {
+      font-size: 20px;
+    }
+
+    .random-button, .repeat-button {
+      font-size: 15px;
+      margin-top: 1px;
+    }
   }
 
   .default-preview {
@@ -122,15 +136,6 @@ $text-color: lighten($background-color, 80%);
     margin-left: 10px;
   }
 
-  .play-button {
-    font-size: 35px;
-    line-height: 42px;
-  }
-
-  .prev-button, .next-button {
-    font-size: 20px;
-  }
-
   .progress-bar {
     margin: 6px 0;
     padding: 6px 5px;
@@ -139,11 +144,6 @@ $text-color: lighten($background-color, 80%);
 
   .progress-bar {
     margin: 0;
-  }
-
-  .random-button, .repeat-button {
-    font-size: 15px;
-    margin-top: 1px;
   }
 
   .right {

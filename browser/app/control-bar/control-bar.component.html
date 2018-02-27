@@ -1,9 +1,11 @@
 <div class="control-bar" [ngClass]="{seeking: seeking}">
   <div class="music-preview" [ngClass]="{'default-preview fa fa-music': !activeMusic || !activeMusic.imageUrl }"
        [ngStyle]="{'background-image': 'url(' + (activeMusic ? activeMusic.imageUrl : '') + ')'}"></div>
-  <div class="music-info" *ngIf="activeMusic">
-    <div class="name">{{activeMusic.title}}</div>
-    <div class="artist">{{activeMusic.artist}}</div>
+  <div class="music-info">
+    <div *ngIf="activeMusic">
+      <div class="name">{{activeMusic.title}}</div>
+      <div class="artist">{{activeMusic.artist}}</div>
+    </div>
   </div>
   <div class="right">
     <div class="controls">
