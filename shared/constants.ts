@@ -3,3 +3,5 @@ export enum PlayerState {
   Playing = 'PLAYING',
   Stopped = 'STOPPED',
 }
+
+export const COVERS_FOLDER = 'covers';

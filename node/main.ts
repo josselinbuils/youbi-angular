@@ -12,6 +12,10 @@ const logger = Logger.create('Main');
 export class Main {
   private static mainWindow: BrowserWindow;
 
+  static getAppDataPath(): string {
+    return app.getPath('userData');
+  }
+
   static init(): void {
     app.on('ready', () => {
       this.createMainWindow();
@@ -81,6 +85,7 @@ export class Main {
       minHeight: 600,
       frame: false,
       backgroundColor: '#111625',
+      webPreferences: { webSecurity: false },
     });
 
     // this.window.loadURL(format({

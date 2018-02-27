@@ -1,14 +1,15 @@
 import { createHash } from 'crypto';
 import * as ElectronStore from 'electron-store';
-import { lstatSync, pathExistsSync, readdir } from 'fs-extra';
+import { lstatSync, outputFileSync, pathExistsSync, readdir } from 'fs-extra';
 import * as moment from 'moment';
 import * as musicMetadata from 'music-metadata';
 import { join } from 'path';
 
-import { Music, validate } from '../shared';
+import { COVERS_FOLDER, Music, validate } from '../shared';
 
 import { LastfmApi } from './lastfm-api';
 import { Logger } from './logger';
+import { Main } from './main';
 
 const logger = Logger.create('Browser');
 const previewApi = LastfmApi.create();
@@ -40,7 +41,13 @@ export class Browser {
 
       logger.info(`Lists musics from ${folderPath}`);
       console.time('listFiles');
-      const musicPaths = (await this.listMusics(folderPath)).slice(0, 100);
+      let musicPaths: string[];
+      if (store.has('musicPaths')) {
+        musicPaths = store.get('musicPaths');
+      } else {
+        musicPaths = (await this.listMusics(folderPath));
+        store.set('musicPaths', musicPaths);
+      }
       console.timeEnd('listFiles');
 
       console.time('metadata');
@@ -66,9 +73,9 @@ export class Browser {
 
   private async getMusicInfo(path: string): Promise<any> {
     const { common, format } = await musicMetadata.parseFile(path);
-    const { album, artist, artists, composer, disk, genre, title, track, year } = common;
+    const { album, artist, artists, composer, disk, genre, picture, title, track, year } = common;
     const { duration, sampleRate } = format;
-    return { album, artist, artists, composer, disk, duration, genre, sampleRate, title, track, year };
+    return { album, artist, artists, composer, disk, duration, genre, picture, sampleRate, title, track, year };
   }
 
   private isSupported(path: string): boolean {
@@ -97,17 +104,39 @@ export class Browser {
     const musicToAdd = musics.filter(music => !validate.string(music.imageUrl));
 
     for (const music of musicToAdd) {
-      const promise = previewApi.getPreview(music)
-        .then(imageUrl => {
-          logger.debug(`addImages: ${++i}/${musicToAdd.length} ${imageUrl}`);
+      const picture = music.picture;
 
-          if (validate.string(imageUrl)) {
-            music.imageUrl = imageUrl;
+      if (picture !== undefined && picture[0] !== undefined) {
+        try {
+          const coversPath = join(Main.getAppDataPath(), COVERS_FOLDER);
+          const coverName = `${music.artist} ${music.album} ${music.year}`;
+          const coverFileName = `${coverName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${picture[0].format}`;
+          const coverPath = join(coversPath, coverFileName);
+
+          if (!pathExistsSync(coverPath)) {
+            outputFileSync(coverPath, picture[0].data, 'binary');
           }
-        })
-        .catch(logger.error);
 
-      promises.push(promise);
+          music.imageUrl = `file:///${coverPath.replace(/\\/g, '/')}`;
+          logger.debug(`addImages: ${++i}/${musicToAdd.length} ${music.imageUrl} (from file)`);
+        } catch (error) {
+          logger.error(error);
+        }
+      } else {
+        const promise = previewApi.getPreview(music)
+          .then(imageUrl => {
+            logger.debug(`addImages: ${++i}/${musicToAdd.length} ${music.imageUrl} (from lastfm)`);
+
+            if (validate.string(imageUrl)) {
+              music.imageUrl = imageUrl;
+            }
+          })
+          .catch(logger.error);
+
+        promises.push(promise);
+      }
+
+      delete music.picture;
     }
 
     await Promise.all(promises);

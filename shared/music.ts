@@ -8,6 +8,7 @@ export interface Music {
   genre: string[];
   imageUrl?: string;
   path: string;
+  picture?: { data: any; format: string };
   readableDuration: string;
   sampleRate: number;
   title: string;
