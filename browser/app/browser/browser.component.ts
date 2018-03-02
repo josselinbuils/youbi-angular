@@ -4,6 +4,7 @@ import * as ColorThief from 'color-thief-browser';
 
 import { Music, validate } from '../../../shared';
 import { Album, MusicManagerService, MusicPlayerService } from '../shared';
+import { Logger } from '../shared/logger.service';
 import { computeItemSize } from '../shared/utils';
 
 const ITEM_MARGIN_PX = 20;
@@ -12,6 +13,7 @@ const MIN_ITEMS_BY_ROW = 4;
 const PREFERRED_ITEM_WIDTH_PX = 200;
 
 const colorThief = new ColorThief();
+const logger = Logger.create('BrowserComponent');
 
 @Component({
   selector: 'app-browser',
@@ -32,10 +34,13 @@ export class BrowserComponent implements AfterContentInit, OnInit {
               private musicPlayerService: MusicPlayerService) {}
 
   ngAfterContentInit(): void {
+    logger.debug('ngAfterContentInit()');
     this.computeItemSize();
   }
 
   async ngOnInit(): Promise<void> {
+    logger.debug('ngOnInit()');
+
     this.musics = await this.musicManagerService.getMusicList();
 
     this.albums = Object.entries(this.groupBy(this.musics, 'album'))
@@ -43,10 +48,9 @@ export class BrowserComponent implements AfterContentInit, OnInit {
         const { artist, imageUrl } = musics[0];
         return { artist, imageUrl, musics, name };
       });
-    console.log(this.albums);
 
+    logger.debug('Albums:', this.albums);
     this.computeLines();
-
     this.musicPlayerService.setPlaylist(this.albums[0].musics);
   }
 
@@ -61,7 +65,9 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     }
   }
 
-  async showDetails(album: Album): Promise<void> {
+  async toggleDetails(album: Album): Promise<void> {
+    logger.debug('toggleDetails()');
+
     if (this.selectedAlbum !== album) {
       this.colorPalette = validate.string(album.imageUrl)
         ? (await this.getColorPalette(album.imageUrl)).map(rgb => `rgb(${rgb.join(', ')})`)
@@ -90,6 +96,8 @@ export class BrowserComponent implements AfterContentInit, OnInit {
   }
 
   private async getColorPalette(imageUrl: string): Promise<number[][]> {
+    logger.debug('getColorPalette()');
+
     return new Promise<number[][]>(resolve => {
       const img = new Image();
       img.onload = () => resolve(colorThief.getPalette(img, 2));

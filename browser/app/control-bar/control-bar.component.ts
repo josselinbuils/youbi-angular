@@ -3,8 +3,11 @@ import * as moment from 'moment';
 
 import { Music, PlayerState } from '../../../shared';
 import { MusicPlayerService } from '../shared';
+import { Logger } from '../shared/logger.service';
 
 const THUMB_WIDTH = 10;
+
+const logger = Logger.create('ControlBarComponent');
 
 @Component({
   selector: 'app-control-bar',
@@ -28,15 +31,19 @@ export class ControlBarComponent implements OnInit {
   constructor(private musicPlayerService: MusicPlayerService, private renderer: Renderer2) {}
 
   async next(): Promise<void> {
+    logger.debug('next()');
     await this.musicPlayerService.next();
   }
 
   ngOnInit(): void {
+    logger.debug('ngOnInit()');
+
     this.reset();
 
     this.musicPlayerService
       .onActiveMusicChange()
       .subscribe(music => {
+        logger.debug('->onActiveMusicChange');
         this.reset();
         this.activeMusic = music;
         this.readableDuration = moment.utc(this.activeMusic.duration * 1000).format('mm:ss');
@@ -45,6 +52,8 @@ export class ControlBarComponent implements OnInit {
     this.musicPlayerService
       .onStateChange()
       .subscribe(state => {
+        logger.debug('->onStateChange:', state);
+
         this.playerState = state;
 
         if (state === PlayerState.Stopped) {
@@ -62,8 +71,9 @@ export class ControlBarComponent implements OnInit {
   }
 
   async play(): Promise<void> {
-    switch (this.playerState) {
+    logger.debug('play()');
 
+    switch (this.playerState) {
       case PlayerState.Paused:
         await this.musicPlayerService.resume();
         break;
@@ -78,10 +88,13 @@ export class ControlBarComponent implements OnInit {
   }
 
   async prev(): Promise<void> {
+    logger.debug('prev()');
     await this.musicPlayerService.prev();
   }
 
   startSeek(downEvent: MouseEvent): void {
+    logger.debug('startSeek()');
+
     const progressBarElement = this.progressElementRef.nativeElement;
     const progressBarWidth = parseInt(getComputedStyle(progressBarElement).width, 10);
     const left = progressBarElement.getBoundingClientRect().left;
@@ -114,6 +127,7 @@ export class ControlBarComponent implements OnInit {
   }
 
   private reset(): void {
+    logger.debug('reset()');
     this.progress = 0;
     this.readableTime = '00:00';
   }

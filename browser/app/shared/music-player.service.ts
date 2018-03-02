@@ -5,9 +5,13 @@ import { Subject } from 'rxjs/Subject';
 
 import { Music, PlayerState } from '../../../shared';
 
+import { Logger } from './logger.service';
+
 const ipc = window.require('ipc-promise');
 
 const STATE_UPDATE_INTERVAL = 60000;
+
+const logger = Logger.create('MusicPlayerService');
 
 @Injectable()
 export class MusicPlayerService implements OnInit {
@@ -22,14 +26,18 @@ export class MusicPlayerService implements OnInit {
   private timeSubject: Subject<number> = new Subject<number>();
 
   getActiveMusic(): Music {
+    logger.debug('getActiveMusic()');
     return this.activeMusic;
   }
 
   ngOnInit(): void {
+    logger.debug('ngOnInit()');
     setInterval(async () => this.updateState(), STATE_UPDATE_INTERVAL);
   }
 
   async next(): Promise<void> {
+    logger.debug('next()');
+
     let newIndex = this.playlist.indexOf(this.activeMusic) + 1;
 
     if (newIndex >= this.playlist.length) {
@@ -58,6 +66,8 @@ export class MusicPlayerService implements OnInit {
   }
 
   async pause(): Promise<void> {
+    logger.debug('pause()');
+
     if (await this.getState() === PlayerState.Playing) {
       this.setState(await ipc.send('player', 'pause'));
 
@@ -72,6 +82,8 @@ export class MusicPlayerService implements OnInit {
   }
 
   async play(musics?: Music[], index: number = 0): Promise<void> {
+    logger.debug('play()');
+
     if (musics !== undefined) {
       this.setPlaylist(musics);
     } else if (this.playlist === undefined) {
@@ -81,6 +93,8 @@ export class MusicPlayerService implements OnInit {
   }
 
   async prev(): Promise<void> {
+    logger.debug('prev()');
+
     let newIndex: number = this.playlist.indexOf(this.activeMusic) - 1;
 
     if (newIndex < 0) {
@@ -97,6 +111,8 @@ export class MusicPlayerService implements OnInit {
   }
 
   async resume(): Promise<void> {
+    logger.debug('setActiveMusic()');
+
     if (await this.getState() === PlayerState.Paused) {
       this.setState(await ipc.send('player', 'resume'));
 
@@ -111,6 +127,8 @@ export class MusicPlayerService implements OnInit {
   }
 
   async seek(timeSeconds: number): Promise<void> {
+    logger.debug(`seek(): ${timeSeconds}s`);
+
     if (await this.getState() === PlayerState.Playing) {
       this.setState(await ipc.send('player', { name: 'seek', args: [timeSeconds] }));
 
@@ -126,16 +144,20 @@ export class MusicPlayerService implements OnInit {
   }
 
   setActiveMusic(music: Music): void {
+    logger.debug('setActiveMusic()');
     this.activeMusic = music;
     this.activeMusicSubject.next(this.activeMusic);
   }
 
   setPlaylist(musics: Music[]): void {
+    logger.debug('setPlaylist()');
     this.playlist = musics;
     this.setActiveMusic(musics[0]);
   }
 
   async stop(): Promise<void> {
+    logger.debug('stop()');
+
     this.stopTimer();
     this.time = 0;
     this.timeSubject.next(this.time);
@@ -146,10 +168,12 @@ export class MusicPlayerService implements OnInit {
   }
 
   private async getState(): Promise<PlayerState> {
+    logger.debug('getState()');
     return ipc.send('player', 'getState');
   }
 
   private async playMusic(music: Music): Promise<void> {
+    logger.debug('playMusic()');
 
     if (await this.getState() === PlayerState.Playing) {
       await this.stop();
@@ -164,10 +188,14 @@ export class MusicPlayerService implements OnInit {
 
     if (this.state === PlayerState.Playing) {
       this.startTimer();
+    } else {
+      await this.stop();
     }
   }
 
   private setState(state: PlayerState): void {
+    logger.debug('setState():', state);
+
     if (this.stateSubject.getValue() !== state) {
       console.log('State:', state);
       this.state = state;
@@ -176,6 +204,8 @@ export class MusicPlayerService implements OnInit {
   }
 
   private startTimer(): void {
+    logger.debug('startTimer()');
+
     this.timerId = window.setInterval(async () => {
       this.time++;
 
@@ -195,10 +225,12 @@ export class MusicPlayerService implements OnInit {
   }
 
   private stopTimer(): void {
+    logger.debug('stopTimer()');
     window.clearInterval(this.timerId);
   }
 
   private async updateState(): Promise<void> {
+    logger.debug('updateState()');
     this.setState(await this.getState());
   }
 }

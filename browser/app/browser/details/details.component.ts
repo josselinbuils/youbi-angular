@@ -2,12 +2,15 @@ import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 
 import { Music, PlayerState } from '../../../../shared';
 import { Album, MusicPlayerService } from '../../shared';
+import { Logger } from '../../shared/logger.service';
 import { computeItemSize } from '../../shared/utils';
 
 const COLUMN_MARGIN_PX = 20;
 const MAX_COLUMNS_BY_ROW = 4;
 const MIN_COLUMNS_BY_ROW = 1;
 const PREFERRED_COLUMN_WIDTH_PX = 400;
+
+const logger = Logger.create('DetailsComponent');
 
 @Component({
   selector: 'app-details',
@@ -64,6 +67,8 @@ export class DetailsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    logger.debug('ngOnInit()');
+
     this.musicPlayerService
       .onActiveMusicChange()
       .subscribe(music => this.activeMusic = music);
@@ -74,10 +79,12 @@ export class DetailsComponent implements OnInit {
   }
 
   async play(musics: Music[], index: number): Promise<void> {
+    logger.debug('play()');
     return this.musicPlayerService.play(musics, index);
   }
 
   select(music: Music): void {
+    logger.debug('select()');
     this.selected = music;
   }
 }

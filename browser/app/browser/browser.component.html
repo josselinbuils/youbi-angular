@@ -3,7 +3,7 @@
        [ngClass]="{'default-preview fa fa-music': !album.imageUrl, 'selected': album === selectedAlbum}"
        [style.background-image]="sanitizer.bypassSecurityTrustStyle('url(' + album.imageUrl + ')')"
        [ngStyle]="{width: itemSize + 'px', height: itemSize + 'px'}"
-       (click)="showDetails(album)">
+       (click)="toggleDetails(album)">
     <div [attr.style]="sanitizer.bypassSecurityTrustStyle('--details-background: ' + colorPalette[0])"
          *ngIf="album === selectedAlbum" class="caret"></div>
   </div>
