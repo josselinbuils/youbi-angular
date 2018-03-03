@@ -1,6 +1,7 @@
-import { AfterContentInit, Component, ElementRef, HostListener, OnInit } from '@angular/core';
+import { AfterContentInit, Component, ElementRef, HostListener, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import * as ColorThief from 'color-thief-browser';
+import { debounce } from 'lodash';
 
 import { Music, validate } from '../../../shared';
 import { Album, MusicManagerService, MusicPlayerService } from '../shared';
@@ -21,14 +22,22 @@ const logger = Logger.create('BrowserComponent');
   styleUrls: ['./browser.component.scss'],
 })
 export class BrowserComponent implements AfterContentInit, OnInit {
+
+  @ViewChildren('item') items: QueryList<ElementRef>;
+
   albums: Album[];
   albumLines: Album[][];
   colorPalette: string[];
   selectedAlbum: Album;
   itemSize: number;
   itemsByLine: number;
+  letter: string;
   lineWidth: number;
   musics: Music[];
+
+  private intersectionObserver: IntersectionObserver;
+  private scrolling = false;
+  private debouncedScrollEndHandler = debounce(this.scrollEndHandler, 500);
 
   constructor(public sanitizer: DomSanitizer, private hostElementRef: ElementRef, private musicManagerService: MusicManagerService,
               private musicPlayerService: MusicPlayerService) {}
@@ -48,10 +57,12 @@ export class BrowserComponent implements AfterContentInit, OnInit {
         const { artist, imageUrl } = musics[0];
         return { artist, imageUrl, musics, name };
       });
-
     logger.debug('Albums:', this.albums);
-    this.computeLines();
-    this.musicPlayerService.setPlaylist(this.albums[0].musics);
+
+    if (this.albums.length > 0) {
+      this.computeLines();
+      this.musicPlayerService.setPlaylist(this.albums[0].musics);
+    }
   }
 
   @HostListener('window:resize')
@@ -63,6 +74,14 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     if (this.albums !== undefined && (itemsByLine === undefined || this.itemsByLine !== itemsByLine)) {
       this.computeLines();
     }
+  }
+
+  @HostListener('scroll')
+  scrollHandler(): void {
+    if (!this.scrolling) {
+      this.scrollStartHandler();
+    }
+    this.debouncedScrollEndHandler();
   }
 
   async toggleDetails(album: Album): Promise<void> {
@@ -114,5 +133,30 @@ export class BrowserComponent implements AfterContentInit, OnInit {
       map[item[key]].push(item);
       return map;
     }, {});
+  }
+
+  private scrollStartHandler(): void {
+    this.scrolling = true;
+
+    if (this.items !== undefined) {
+      this.intersectionObserver = new IntersectionObserver((intersections) => {
+        const intersection = intersections.find(i => i.isIntersecting);
+
+        if (intersection !== undefined) {
+          this.letter = intersection.target.getAttribute('letter');
+        }
+      }, {
+        root: this.hostElementRef.nativeElement,
+        rootMargin: '0px 0px -95% 0px',
+      });
+
+      this.items.forEach(item => this.intersectionObserver.observe(item.nativeElement));
+    }
+  }
+
+  private scrollEndHandler(): void {
+    delete this.letter;
+    this.intersectionObserver.disconnect();
+    this.scrolling = false;
   }
 }

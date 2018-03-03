@@ -37,6 +37,7 @@
     "font-awesome": "^4.7.0",
     "fs-extra": "^5.0.0",
     "ipc-promise": "^0.1.4",
+    "lodash": "^4.17.5",
     "moment": "^2.20.1",
     "mp3": "^0.1.0",
     "music-metadata": "^0.9.5",
