@@ -77,8 +77,14 @@ export class Player {
       await delay(1);
       this.audioOutput.start();
 
+      if (this.getState() !== PlayerState.Playing) {
+        throw new Error('Unknown error');
+      }
+
     } catch (error) {
       logger.error(`Unable to play: ${error.message}`);
+      logger.debug(`Audio output state: active=${this.audioOutput.isActive()} stopped=${this.audioOutput.isStopped()}`);
+      this.stop();
     }
 
     return this.getState();

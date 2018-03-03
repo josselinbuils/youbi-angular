@@ -30,8 +30,9 @@ export class MusicPlayerService implements OnInit {
     return this.activeMusic;
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     logger.debug('ngOnInit()');
+    await this.updateState();
     setInterval(async () => this.updateState(), STATE_UPDATE_INTERVAL);
   }
 
@@ -161,8 +162,9 @@ export class MusicPlayerService implements OnInit {
     this.stopTimer();
     this.time = 0;
     this.timeSubject.next(this.time);
+    await this.updateState();
 
-    if (await this.getState() !== PlayerState.Stopped) {
+    if (this.state !== PlayerState.Stopped) {
       this.setState(await ipc.send('player', 'stop'));
     }
   }
@@ -194,10 +196,8 @@ export class MusicPlayerService implements OnInit {
   }
 
   private setState(state: PlayerState): void {
-    logger.debug('setState():', state);
-
     if (this.stateSubject.getValue() !== state) {
-      console.log('State:', state);
+      logger.debug('setState():', state);
       this.state = state;
       this.stateSubject.next(state);
     }
