@@ -1,5 +1,8 @@
 import * as color from 'ansicolor';
 
+const S_TO_MS = 1e3;
+const NS_TO_MS = 1e-6;
+
 enum LogLevel {
   Debug = 'DEBUG',
   Error = 'ERROR',
@@ -12,6 +15,8 @@ export class Logger {
   private static n = 0;
 
   color: string;
+
+  private times = {};
 
   static create(tag: string): Logger {
     return new Logger(tag);
@@ -44,8 +49,28 @@ export class Logger {
     this.write(LogLevel.Error, args);
   }
 
+  time(tag: string = 'default'): void {
+    this.times[tag] = this.now();
+  }
+
+  timeEnd(tag: string = 'default'): void {
+    const startTime = this.times[tag];
+
+    if (startTime === undefined) {
+      throw new Error('Unknown tag');
+    }
+
+    delete this.times[tag];
+    this.debug(`${tag}: ${Math.round((this.now() - startTime) * 100) / 100}ms`);
+  }
+
   private constructor(private tag: string) {
     this.color = Logger.getInstanceColor();
+  }
+
+  private now(): number {
+    const hrTime = process.hrtime();
+    return hrTime[0] * S_TO_MS + hrTime[1] * NS_TO_MS;
   }
 
   private write(level: LogLevel, args: any[]): void {

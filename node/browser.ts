@@ -29,7 +29,7 @@ export class Browser {
 
     let musics: Music[];
 
-    console.time('musicList');
+    this.logger.time('musicList');
 
     if (this.store.has('musicList')) {
       this.logger.debug('From cache');
@@ -39,7 +39,7 @@ export class Browser {
       this.logger.debug('From file system');
 
       this.logger.info(`Lists musics from ${folderPath}`);
-      console.time('listFiles');
+      this.logger.time('listFiles');
       let musicPaths: string[];
       if (this.store.has('musicPaths')) {
         musicPaths = this.store.get('musicPaths');
@@ -47,15 +47,15 @@ export class Browser {
         musicPaths = (await this.listMusics(folderPath));
         this.store.set('musicPaths', musicPaths);
       }
-      console.timeEnd('listFiles');
+      this.logger.timeEnd('listFiles');
 
-      console.time('metadata');
+      this.logger.time('metadata');
       musics = await this.retrieveMetadata(musicPaths);
-      console.timeEnd('metadata');
+      this.logger.timeEnd('metadata');
 
-      console.time('lastfm');
+      this.logger.time('covers');
       musics = await this.addImages(musics);
-      console.timeEnd('lastfm');
+      this.logger.timeEnd('covers');
 
       const md5 = createHash('md5').update(musicPaths.join('')).digest('hex');
       this.store.set('musicList', { md5, musics });
@@ -63,7 +63,7 @@ export class Browser {
       this.logger.info('Music list updated');
     }
 
-    console.timeEnd('musicList');
+    this.logger.timeEnd('musicList');
 
     return musics;
   }
