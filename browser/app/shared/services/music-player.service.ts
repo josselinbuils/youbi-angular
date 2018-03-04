@@ -3,9 +3,10 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 
-import { Music, PlayerState } from '../../../shared';
+import { PlayerState } from '../../../../shared/constants';
+import { Music } from '../../../../shared/interfaces';
 
-import { Logger } from './logger.service';
+import { Logger } from './logger';
 
 const ipc = window.require('ipc-promise');
 
@@ -30,10 +31,26 @@ export class MusicPlayerService implements OnInit {
     return this.activeMusic;
   }
 
+  getCurrentTime(): number {
+    logger.debug('getCurrentTime()');
+    return this.time;
+  }
+
+  /**
+   * Gets and updates player state.
+   */
+  async getState(): Promise<PlayerState> {
+    logger.debug('getState()');
+    const state = await ipc.send('player', 'getState');
+    logger.debug('getState:', state);
+    this.setState(state);
+    return state;
+  }
+
   async ngOnInit(): Promise<void> {
     logger.debug('ngOnInit()');
-    await this.updateState();
-    setInterval(async () => this.updateState(), STATE_UPDATE_INTERVAL);
+    await this.getState();
+    setInterval(async () => this.getState(), STATE_UPDATE_INTERVAL);
   }
 
   async next(): Promise<void> {
@@ -82,14 +99,21 @@ export class MusicPlayerService implements OnInit {
     }
   }
 
-  async play(musics?: Music[], index: number = 0): Promise<void> {
+  async play(musics?: Music[], index?: number): Promise<void> {
     logger.debug('play()');
 
     if (musics !== undefined) {
       this.setPlaylist(musics);
     } else if (this.playlist === undefined) {
       throw new Error('No music to play');
+    } else if (this.activeMusic !== undefined && index === undefined) {
+      index = this.playlist.indexOf(this.activeMusic);
     }
+
+    if (index === undefined) {
+      index = 0;
+    }
+
     await this.playMusic(this.playlist[index]);
   }
 
@@ -162,16 +186,10 @@ export class MusicPlayerService implements OnInit {
     this.stopTimer();
     this.time = 0;
     this.timeSubject.next(this.time);
-    await this.updateState();
 
-    if (this.state !== PlayerState.Stopped) {
+    if (await this.getState() !== PlayerState.Stopped) {
       this.setState(await ipc.send('player', 'stop'));
     }
-  }
-
-  private async getState(): Promise<PlayerState> {
-    logger.debug('getState()');
-    return ipc.send('player', 'getState');
   }
 
   private async playMusic(music: Music): Promise<void> {
@@ -227,10 +245,5 @@ export class MusicPlayerService implements OnInit {
   private stopTimer(): void {
     logger.debug('stopTimer()');
     window.clearInterval(this.timerId);
-  }
-
-  private async updateState(): Promise<void> {
-    logger.debug('updateState()');
-    this.setState(await this.getState());
   }
 }

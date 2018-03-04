@@ -25,7 +25,7 @@ export class Main {
       const executors = { browser, player };
 
       Object.entries(executors).forEach(([name, executor]) => {
-        ipc.on(name, command => {
+        ipc.on(name, async command => {
 
           if (typeof command === 'string') {
             command = { name: command };
@@ -33,30 +33,27 @@ export class Main {
 
           const logHeader = `${name}->${command.name}`;
 
-          logger.debug(`Execute: ${logHeader}()`);
+          logger.debug(`Executes: ${logHeader}()`);
 
           if (typeof executor[command.name] !== 'function') {
-            return Promise.reject(new Error('Unknown executor method'));
+            const message = 'Unknown executor method';
+            logger.error(`${logHeader}: ${message}`);
+            throw { message };
           }
 
           try {
             let res = executor[command.name].apply(executor, command.args);
 
             if (res instanceof Promise) {
-              res = res.catch(error => {
-                logger.error(`${logHeader}: ${error.stack}`);
-                throw error;
-              });
-            } else {
-              logger.debug(`${logHeader}: ${res}`);
-              res = Promise.resolve(res);
+              res = await res;
             }
 
+            logger.debug(`Responds: ${logHeader}: ${typeof res !== 'object' ? res : '[object]'}`);
             return res;
 
           } catch (error) {
             logger.error(`${logHeader}: ${error.stack}`);
-            return Promise.reject(error);
+            throw { message: error.message };
           }
         });
       });

@@ -1,7 +1,4 @@
-$background-color: #111625;
-$primary-color: #007ad8;
-$secondary-color: lighten($background-color, 15%);
-$text-color: lighten($background-color, 80%);
+@import '../colors';
 
 * {
   user-select: none;
@@ -14,13 +11,13 @@ $text-color: lighten($background-color, 80%);
   color: $text-color;
   display: flex;
   height: 83px;
-  padding-top: 10px;
+  padding: 10px;
   box-sizing: border-box;
   background: lighten($background-color, 5%);
   border-top: 1px solid darken($background-color, 5%);
 
   &.seeking .bar, .progress-bar:hover .bar {
-    background: $primary-color;
+    background: $primary-color !important;
   }
 
   &.seeking .bar:after, .progress-bar:hover .bar:after {
@@ -38,144 +35,158 @@ $text-color: lighten($background-color, 80%);
     user-select: none !important;
   }
 
-  .bar {
-    width: 0;
-    background: #efefef;
-    position: relative;
-  }
+  .button {
+    display: inline-block;
+    vertical-align: middle;
 
-  .bar-container {
-    background: $secondary-color;
-  }
-
-  .bar-container, .bar {
-    height: 4px;
-    border-radius: 2px;
-  }
-
-  .controls {
-    margin-right: 24px;
-    text-align: center;
-
-    .button {
-      display: inline-block;
-      vertical-align: middle;
-      margin-left: 25px;
-      margin-right: 25px;
+    & + .button {
+      margin-left: 0 !important;
     }
 
-    .button + .button {
-      margin-left: 0;
-    }
-
-    .button:hover {
-      color: lighten($text-color, 15%);
-    }
-
-    .button:active, .button.checked {
+    &:active, &.checked {
       color: $primary-color;
     }
 
-    .play-button {
-      font-size: 35px;
-      line-height: 42px;
-    }
-
-    .prev-button, .next-button {
-      font-size: 20px;
-    }
-
-    .random-button, .repeat-button {
-      font-size: 15px;
-      margin-top: 1px;
+    &:hover:not(:active, .checked) {
+      color: lighten($text-color, 15%);
     }
   }
 
-  .default-preview {
-    font-size: 40px;
-    line-height: 62px;
-    text-align: center;
-    background: $secondary-color;
-    color: $text-color;
+  .center {
+    flex-grow: 1;
+
+    .controls {
+      margin-right: 24px;
+      text-align: center;
+
+      .button {
+        margin-left: 25px;
+        margin-right: 25px;
+
+        &.play-button {
+          font-size: 35px;
+          line-height: 42px;
+        }
+
+        &.prev-button, &.next-button {
+          font-size: 20px;
+        }
+
+        &.random-button, &.repeat-button {
+          font-size: 15px;
+          margin-top: 1px;
+        }
+      }
+    }
+
+    .time {
+      display: flex;
+      width: 90%;
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+
+      .current-time {
+        margin-right: 5px;
+      }
+
+      .current-time, .duration {
+        text-align: center;
+        font-size: .8em;
+        line-height: 16px;
+      }
+
+      .duration {
+        margin-left: 5px;
+      }
+
+      .progress-bar {
+        margin: 0;
+        padding: 6px 5px;
+        flex-grow: 1;
+
+        .bar-container {
+          background: $secondary-color;
+
+          &, .bar {
+            height: 4px;
+            border-radius: 2px;
+          }
+
+          .bar {
+            width: 0;
+            background: #efefef;
+            position: relative;
+          }
+        }
+      }
+    }
   }
 
-  .flex {
-    display: flex;
+  .left, .right {
+    flex: 0 1 250px;
   }
 
   .left {
-    flex-grow: 1;
-  }
-
-  .music-info {
-    @extend .text-ellipsis;
-    flex: 0 0 158px;
-    height: 62px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-    margin-left: 12px;
-    overflow: hidden;
-
-    .name, .artist {
-      @extend .text-ellipsis;
-      user-select: text;
-      margin-top: 5px;
+    & > * {
+      float: left;
+      vertical-align: top;
+      height: 62px;
     }
 
-    .artist {
-      font-size: .8em;
+    .music-info {
+      width: 158px;
+      margin-left: 12px;
+
+      .name, .artist {
+        @extend .text-ellipsis;
+        user-select: text;
+        margin-top: 5px;
+      }
+
+      .artist {
+        font-size: .8em;
+      }
     }
-  }
 
-  .music-preview {
-    flex: 0 0 62px;
-    height: 62px;
-    background-repeat: no-repeat;
-    background-size: 62px;
-    margin-left: 10px;
-  }
+    .music-preview {
+      width: 62px;
+      background-repeat: no-repeat;
+      background-size: 62px;
 
-  .progress-bar {
-    margin: 6px 0;
-    padding: 6px 5px;
-    flex-grow: 1;
-  }
-
-  .progress-bar {
-    margin: 0;
+      &.default-preview {
+        font-size: 40px;
+        line-height: 62px;
+        text-align: center;
+        background: $secondary-color;
+        color: $text-color;
+      }
+    }
   }
 
   .right {
-    flex-grow: 1;
-    padding-right: 247px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+
+    .button {
+      $size: 20px;
+      margin-right: 10px;
+      font-size: $size;
+      line-height: $size;
+      height: $size;
+      width: $size;
+      margin-left: auto;
+
+      &.select-output-button {
+        margin-top: 2px;
+      }
+    }
   }
 
   .text-ellipsis {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-  }
-
-  .time {
-    display: flex;
-    width: 90%;
-    max-width: 700px;
-    margin: 0 auto;
-    position: relative;
-
-    .current-time {
-      margin-right: 5px;
-    }
-
-    .current-time, .duration {
-      text-align: center;
-      font-size: .8em;
-      line-height: 16px;
-    }
-
-    .duration {
-      margin-left: 5px;
-    }
   }
 }

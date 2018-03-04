@@ -1,0 +1,56 @@
+@import '../../colors';
+
+.backdrop {
+  display: none;
+  position: absolute;
+  top: calc(100% - 100vh);
+  right: 0;
+  bottom: 100%;
+  left: 0;
+
+  &.show {
+    display: block;
+  }
+}
+
+.output-selector {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% - 1px);
+  width: 210px;
+  max-height: 0;
+  background: lighten($background-color, 5%);
+  border: 1px solid darken($background-color, 5%);
+  border-right: none;
+  border-bottom: none;
+  transition: max-height 0.15s ease-out;
+  overflow: hidden;
+  box-sizing: border-box;
+  color: $text-color;
+
+  &.show {
+    max-height: 250px;
+    transition-timing-function: ease-in-out;
+  }
+
+  .header {
+    margin: 5px 10px;
+  }
+
+  .body {
+    margin: 10px 0 7px 0;
+
+    .output {
+      padding: 5px 25px;
+      font-size: .9em;
+
+      &.active {
+        background: $primary-color;
+      }
+
+      &:hover:not(.active) {
+        background: $secondary-color;
+      }
+    }
+  }
+}

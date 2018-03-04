@@ -1,4 +1,4 @@
-import { Music } from '../../../shared';
+import { Music } from '../../../../shared/interfaces';
 
 export interface Album {
   artist: string;

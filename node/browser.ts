@@ -6,8 +6,10 @@ import * as musicMetadata from 'music-metadata';
 import { join } from 'path';
 import * as sharp from 'sharp';
 
-import { COVERS_FOLDER, Music, validate } from '../shared';
+import { Music } from '../shared/interfaces';
+import { validate } from '../shared/utils';
 
+import { COVERS_FOLDER } from './constants';
 import { LastfmApi } from './lastfm-api';
 import { Logger } from './logger';
 import { Main } from './main';

@@ -1,26 +1,40 @@
 import { pathExistsSync } from 'fs-extra';
-import { AudioOutput, getDevices } from 'naudiodon';
+import { AudioOutput, getAPIList } from 'naudiodon';
 import { Readable } from 'stream';
 
-import { delay, PlayerState } from '../shared';
+import { PlayerState } from '../shared/constants';
+import { AudioApi } from '../shared/interfaces';
+import { delay } from '../shared/utils';
 
 import { Decoder, DecodingFormat } from './decoder';
 import { Logger } from './logger';
 
 const AUDIO_OUTPUT_RETRIES = 2;
+const DEFAULT_API_ID = -1;
+const DEFAULT_CHANNEL_COUNT = 2;
+const DEFAULT_SAMPLE_FORMAT = 16;
+const DEFAULT_SAMPLE_RATE = 44100;
 
 const logger = Logger.create('Player');
 
 export class Player {
 
+  private audioApi: AudioApi;
   private audioOutput: AudioOutput;
   private audioStream;
   private currentMusic?: { format: DecodingFormat };
   private decoder = Decoder.create();
-  private device: { id: number };
 
   static create(): Player {
     return new Player();
+  }
+
+  getActiveAudioAPI(): AudioApi {
+    return this.audioApi;
+  }
+
+  getAudioAPIList(): AudioApi[] {
+    return getAPIList();
   }
 
   getState(): PlayerState {
@@ -41,6 +55,15 @@ export class Player {
     }
   }
 
+  selectAudioAPI(api: AudioApi): void {
+    try {
+      this.audioOutput = this.getAudioOutput(api);
+      this.audioApi = api;
+    } catch (error) {
+      throw new Error('Unable to select audio API');
+    }
+  }
+
   pause(): PlayerState {
     if (this.getState() === PlayerState.Playing) {
       logger.info('Pause');
@@ -57,13 +80,10 @@ export class Player {
     logger.info(`Play ${path}`);
 
     if (!pathExistsSync(path)) {
-      throw Error('File not found');
+      throw new Error('File not found');
     }
 
     try {
-      this.device = getDevices()
-        .filter(d => /usb|dx7/i.test(d.name) && /wdm/i.test(d.hostAPIName))[0];
-
       this.stop();
 
       const format = await this.decoder.get('format', path) as DecodingFormat;
@@ -71,10 +91,10 @@ export class Player {
 
       logger.debug(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}Hz`);
 
-      this.audioOutput = this.getAudioOutput(format, this.device.id);
+      this.audioOutput = this.getAudioOutput(this.audioApi, format);
       this.setAudioStream(await this.decoder.start(path));
       // Delay needed to fill enough the audio stream before starting reading it, check should be done by the lib
-      await delay(1);
+      await delay(100);
       this.audioOutput.start();
 
       if (this.getState() !== PlayerState.Playing) {
@@ -139,15 +159,24 @@ export class Player {
 
   private constructor() {}
 
-  private getAudioOutput(format: DecodingFormat, deviceId: number, retries: number = AUDIO_OUTPUT_RETRIES): AudioOutput {
-    // deviceId = -1;
+  private getAudioOutput(api?: AudioApi, format?: DecodingFormat, retries: number = AUDIO_OUTPUT_RETRIES): AudioOutput {
 
     const options = {
-      channelCount: format.channelsPerFrame,
-      sampleFormat: format.bitsPerChannel,
-      sampleRate: format.sampleRate,
-      deviceId,
+      apiId: DEFAULT_API_ID,
+      channelCount: DEFAULT_CHANNEL_COUNT,
+      sampleFormat: DEFAULT_SAMPLE_FORMAT,
+      sampleRate: DEFAULT_SAMPLE_RATE,
     };
+
+    if (api !== undefined) {
+      options.apiId = api.id;
+    }
+
+    if (format !== undefined) {
+      options.channelCount = format.channelsPerFrame;
+      options.sampleFormat = format.bitsPerChannel;
+      options.sampleRate = format.sampleRate;
+    }
 
     if (this.audioOutput !== undefined) {
       if (JSON.stringify(options) === JSON.stringify(this.audioOutput.options)) {
@@ -162,15 +191,9 @@ export class Player {
 
     let audioOutput: AudioOutput;
     try {
-      logger.debug(`Creates audio output on device ${deviceId}`);
+      logger.debug(`Creates audio output with ${api !== undefined ? api.name : 'default'} API`);
 
-      audioOutput = new AudioOutput({
-        channelCount: format.channelsPerFrame,
-        sampleFormat: format.bitsPerChannel,
-        sampleRate: format.sampleRate,
-        deviceId,
-      });
-
+      audioOutput = new AudioOutput(options);
       audioOutput.on('finish', () => logger.debug('Audio output stopped'));
       return audioOutput;
 
@@ -179,9 +202,9 @@ export class Player {
 
       if (retries > 0) {
         logger.debug(`Retry ${ AUDIO_OUTPUT_RETRIES - retries + 1}/${AUDIO_OUTPUT_RETRIES}`);
-        return this.getAudioOutput(format, deviceId, retries - 1);
+        return this.getAudioOutput(api, format, retries - 1);
       } else {
-        throw Error('Unable to create audio output');
+        throw new Error('Unable to create audio output');
       }
     }
   }

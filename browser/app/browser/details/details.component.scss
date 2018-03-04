@@ -1,7 +1,4 @@
-$background-color: #111625;
-$primary-color: #007ad8;
-$secondary-color: lighten($background-color, 15%);
-$text-color: lighten($background-color, 80%);
+@import '../../colors';
 
 @keyframes slide-down {
   from {
@@ -54,7 +51,7 @@ $text-color: lighten($background-color, 80%);
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
-        max-width: 300px;
+        max-width: calc(100% - 80px);
         display: inline-block;
         vertical-align: top;
       }

@@ -1,8 +1,9 @@
 import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 
-import { Music, PlayerState } from '../../../../shared';
-import { Album, MusicPlayerService } from '../../shared';
-import { Logger } from '../../shared/logger.service';
+import { PlayerState } from '../../../../shared/constants';
+import { Music } from '../../../../shared/interfaces';
+import { Album } from '../../shared/interfaces';
+import { Logger, MusicPlayerService } from '../../shared/services';
 import { computeItemSize } from '../../shared/utils';
 
 const COLUMN_MARGIN_PX = 20;

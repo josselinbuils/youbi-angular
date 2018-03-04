@@ -10,7 +10,7 @@ import 'mp3';
 import 'ogg.js';
 import 'vorbis.js';
 
-import { delay } from '../shared';
+import { delay } from '../shared/utils';
 
 import { Logger } from './logger';
 

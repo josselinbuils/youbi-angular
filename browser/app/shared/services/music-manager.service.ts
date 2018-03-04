@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 
-import { Music } from '../../../shared';
+import { Music } from '../../../../shared/interfaces';
 
-import { Logger } from './logger.service';
+import { Logger } from './logger';
 
 const ipc = window.require('ipc-promise');
 

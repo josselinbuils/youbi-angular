@@ -3,10 +3,11 @@ import { DomSanitizer } from '@angular/platform-browser';
 import * as ColorThief from 'color-thief-browser';
 import { debounce } from 'lodash';
 
-import { Music, validate } from '../../../shared';
-import { Album, MusicManagerService, MusicPlayerService } from '../shared';
-import { Logger } from '../shared/logger.service';
-import { computeItemSize } from '../shared/utils';
+import { Music } from '../../../shared/interfaces';
+import { validate } from '../../../shared/utils';
+import { Album } from '../shared/interfaces';
+import { Logger, MusicManagerService, MusicPlayerService } from '../shared/services';
+import { computeItemSize, groupBy } from '../shared/utils';
 
 const ITEM_MARGIN_PX = 20;
 const MAX_ITEMS_BY_ROW = 30;
@@ -39,7 +40,9 @@ export class BrowserComponent implements AfterContentInit, OnInit {
   private scrolling = false;
   private debouncedScrollEndHandler = debounce(this.scrollEndHandler, 500);
 
-  constructor(public sanitizer: DomSanitizer, private hostElementRef: ElementRef, private musicManagerService: MusicManagerService,
+  constructor(public sanitizer: DomSanitizer,
+              private hostElementRef: ElementRef,
+              private musicManagerService: MusicManagerService,
               private musicPlayerService: MusicPlayerService) {}
 
   ngAfterContentInit(): void {
@@ -52,7 +55,7 @@ export class BrowserComponent implements AfterContentInit, OnInit {
 
     this.musics = await this.musicManagerService.getMusicList();
 
-    this.albums = Object.entries(this.groupBy(this.musics, 'album'))
+    this.albums = Object.entries(groupBy(this.musics, 'album'))
       .map(([name, musics]) => {
         const { artist, imageUrl } = musics[0];
         return { artist, imageUrl, musics, name };
@@ -67,8 +70,9 @@ export class BrowserComponent implements AfterContentInit, OnInit {
 
   @HostListener('window:resize')
   resizeHandler(): void {
-    const itemsByLine = this.itemsByLine;
+    logger.debug('resizeHandler()');
 
+    const itemsByLine = this.itemsByLine;
     this.computeItemSize();
 
     if (this.albums !== undefined && (itemsByLine === undefined || this.itemsByLine !== itemsByLine)) {
@@ -78,6 +82,8 @@ export class BrowserComponent implements AfterContentInit, OnInit {
 
   @HostListener('scroll')
   scrollHandler(): void {
+    logger.debug('scrollHandler()');
+
     if (!this.scrolling) {
       this.scrollStartHandler();
     }
@@ -98,6 +104,8 @@ export class BrowserComponent implements AfterContentInit, OnInit {
   }
 
   private computeItemSize(): void {
+    logger.debug('computeItemSize()');
+
     const res = computeItemSize(
       this.hostElementRef.nativeElement.offsetWidth, ITEM_MARGIN_PX, PREFERRED_ITEM_WIDTH_PX, MIN_ITEMS_BY_ROW, MAX_ITEMS_BY_ROW,
     );
@@ -107,8 +115,11 @@ export class BrowserComponent implements AfterContentInit, OnInit {
   }
 
   private computeLines(): void {
+    logger.debug('computeLines()');
+
     const linesCount = Math.ceil(this.albums.length / this.itemsByLine);
     this.albumLines = [];
+
     for (let i = 0; i < linesCount; i++) {
       this.albumLines.push(this.albums.slice(i * this.itemsByLine, (i + 1) * this.itemsByLine));
     }
@@ -125,17 +136,8 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     });
   }
 
-  private groupBy(array: Array<any>, key: string): { [key: string]: any } {
-    return array.reduce((map, item) => {
-      if (map[item[key]] === undefined) {
-        map[item[key]] = [];
-      }
-      map[item[key]].push(item);
-      return map;
-    }, {});
-  }
-
   private scrollStartHandler(): void {
+    logger.debug('scrollStartHandler()');
     this.scrolling = true;
 
     if (this.items !== undefined) {
@@ -155,6 +157,7 @@ export class BrowserComponent implements AfterContentInit, OnInit {
   }
 
   private scrollEndHandler(): void {
+    logger.debug('scrollEndHandler()');
     delete this.letter;
     this.intersectionObserver.disconnect();
     this.scrolling = false;

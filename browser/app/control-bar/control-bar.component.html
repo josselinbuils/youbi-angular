@@ -1,13 +1,15 @@
 <div class="control-bar" [ngClass]="{seeking: seeking}">
-  <div class="music-preview" [ngClass]="{'default-preview fa fa-music': !activeMusic || !activeMusic.imageUrl }"
-       [ngStyle]="{'background-image': 'url(' + (activeMusic ? activeMusic.imageUrl : '') + ')'}"></div>
-  <div class="music-info">
-    <div *ngIf="activeMusic">
-      <div class="name">{{activeMusic.title}}</div>
-      <div class="artist">{{activeMusic.artist}}</div>
+  <div class="left">
+    <div class="music-preview" [ngClass]="{'default-preview fa fa-music': !activeMusic || !activeMusic.imageUrl }"
+         [ngStyle]="{'background-image': 'url(' + (activeMusic ? activeMusic.imageUrl : '') + ')'}"></div>
+    <div class="music-info">
+      <div *ngIf="activeMusic">
+        <div class="name">{{activeMusic.title}}</div>
+        <div class="artist">{{activeMusic.artist}}</div>
+      </div>
     </div>
   </div>
-  <div class="right">
+  <div class="center">
     <div class="controls">
       <div class="button random-button" [ngClass]="{checked: random}" (click)="random = !random">
         <i class="fa fa-random" aria-hidden="true"></i>
@@ -36,4 +38,11 @@
       <div class="duration">{{readableDuration}}</div>
     </div>
   </div>
+  <div class="right">
+    <div class="button select-output-button" [ngClass]="{checked: showOutputSelector}"
+         (click)="showOutputSelector = !showOutputSelector">
+      <i class="fa fa-headphones" aria-hidden="true"></i>
+    </div>
+  </div>
 </div>
+<app-output-selector [show]="showOutputSelector" (close)="showOutputSelector = false"></app-output-selector>

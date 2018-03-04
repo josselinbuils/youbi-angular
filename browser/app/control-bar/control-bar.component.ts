@@ -1,9 +1,9 @@
 import { Component, ElementRef, OnInit, Renderer2, ViewChild } from '@angular/core';
 import * as moment from 'moment';
 
-import { Music, PlayerState } from '../../../shared';
-import { MusicPlayerService } from '../shared';
-import { Logger } from '../shared/logger.service';
+import { PlayerState } from '../../../shared/constants';
+import { Music } from '../../../shared/interfaces';
+import { Logger, MusicPlayerService } from '../shared/services';
 
 const THUMB_WIDTH = 10;
 
@@ -27,8 +27,10 @@ export class ControlBarComponent implements OnInit {
   readableTime: string;
   repeat: boolean;
   seeking: boolean;
+  showOutputSelector = false;
 
-  constructor(private musicPlayerService: MusicPlayerService, private renderer: Renderer2) {}
+  constructor(private musicPlayerService: MusicPlayerService,
+              private renderer: Renderer2) {}
 
   async next(): Promise<void> {
     logger.debug('next()');
