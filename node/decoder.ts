@@ -16,8 +16,6 @@ import { Logger } from './logger';
 
 const SEEK_TIMEOUT_MS = 5000;
 
-const logger = Logger.create('Decoder');
-
 export class Decoder {
 
   asset: Asset;
@@ -25,12 +23,13 @@ export class Decoder {
   bufferList: Buffer[];
 
   static create(): Decoder {
-    return new Decoder();
+    return new Decoder(Logger.create('Decoder'));
   }
 
   async get(event: string, path: string): Promise<any> {
+    this.logger.debug('get()');
     return new Promise<any>((resolve, reject) => {
-      logger.debug(`Gets ${event} of ${path}`);
+      this.logger.debug(`Gets ${event} of ${path}`);
       this.asset = Asset.fromFile(path);
       this.asset.get(event, resolve);
       this.asset.on('error', reject);
@@ -38,13 +37,15 @@ export class Decoder {
   }
 
   isActive(): boolean {
-    return this.asset !== undefined && this.asset.active;
+    const active = this.asset !== undefined && this.asset.active;
+    this.logger.debug('isActive():', active);
+    return active;
   }
 
   async seek(byteOffset: number): Promise<Readable> {
-    if (this.asset !== undefined && this.asset.decoder !== undefined) {
-      logger.debug(`Seek to byte offset ${byteOffset}`);
+    this.logger.debug('seek():', byteOffset);
 
+    if (this.asset !== undefined && this.asset.decoder !== undefined) {
       const startTime = Date.now();
       let buffer = Buffer.concat(this.bufferList);
 
@@ -66,13 +67,15 @@ export class Decoder {
   }
 
   async start(path: string): Promise<Readable> {
+    this.logger.debug('start():', path);
+
     return new Promise<Readable>(resolve => {
 
       if (this.isActive()) {
         throw new Error('Decoder active');
       }
 
-      logger.debug(`Starts decoding ${path}`);
+      this.logger.debug(`Starts decoding ${path}`);
 
       this.asset = Asset.fromFile(path);
       this.audioStream = through();
@@ -96,7 +99,7 @@ export class Decoder {
 
         if (step > lastStep || progress === 100) {
           lastStep = step;
-          logger.debug(`Decoded ${Math.round(progress)}%`);
+          this.logger.debug(`Decoded ${Math.round(progress)}%`);
         }
       });
 
@@ -107,18 +110,20 @@ export class Decoder {
   }
 
   stop(): void {
+    this.logger.debug('stop()');
 
     if (!this.isActive()) {
       throw new Error('Decoder inactive');
     }
 
-    logger.debug('Stops decoder');
     this.asset.stop();
     this.audioStream.destroy();
     this.bufferList = [];
   }
 
-  private constructor() {}
+  private constructor(private logger: Logger) {
+    logger.debug('constructor()');
+  }
 }
 
 export interface DecodingFormat {

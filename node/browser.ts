@@ -14,18 +14,14 @@ import { LastfmApi } from './lastfm-api';
 import { Logger } from './logger';
 import { Main } from './main';
 
-const logger = Logger.create('Browser');
-const previewApi = LastfmApi.create();
-const store = new ElectronStore();
-
 export class Browser {
 
   static create(): Browser {
-    return new Browser();
+    return new Browser(Logger.create('Browser'), LastfmApi.create(), new ElectronStore());
   }
 
   async getMusicList(folderPath: string): Promise<Music[]> {
-    logger.info('Retrieve music list');
+    this.logger.debug('getMusicList()');
 
     if (!pathExistsSync(folderPath)) {
       throw new Error('Invalid path');
@@ -35,21 +31,21 @@ export class Browser {
 
     console.time('musicList');
 
-    if (store.has('musicList')) {
-      logger.debug('From cache');
-      const musicList = store.get('musicList');
+    if (this.store.has('musicList')) {
+      this.logger.debug('From cache');
+      const musicList = this.store.get('musicList');
       musics = musicList.musics;
     } else {
-      logger.debug('From file system');
+      this.logger.debug('From file system');
 
-      logger.info(`Lists musics from ${folderPath}`);
+      this.logger.info(`Lists musics from ${folderPath}`);
       console.time('listFiles');
       let musicPaths: string[];
-      if (store.has('musicPaths')) {
-        musicPaths = store.get('musicPaths');
+      if (this.store.has('musicPaths')) {
+        musicPaths = this.store.get('musicPaths');
       } else {
         musicPaths = (await this.listMusics(folderPath));
-        store.set('musicPaths', musicPaths);
+        this.store.set('musicPaths', musicPaths);
       }
       console.timeEnd('listFiles');
 
@@ -62,9 +58,9 @@ export class Browser {
       console.timeEnd('lastfm');
 
       const md5 = createHash('md5').update(musicPaths.join('')).digest('hex');
-      store.set('musicList', { md5, musics });
+      this.store.set('musicList', { md5, musics });
 
-      logger.info('Music list updated');
+      this.logger.info('Music list updated');
     }
 
     console.timeEnd('musicList');
@@ -72,9 +68,14 @@ export class Browser {
     return musics;
   }
 
-  private constructor() {}
+  private constructor(private logger: Logger,
+                      private previewApi: LastfmApi,
+                      private store: ElectronStore) {
+    logger.debug('constructor()');
+  }
 
   private async getMusicInfo(path: string): Promise<any> {
+    this.logger.debug('getMusicInfo():', path);
     const { common, format } = await musicMetadata.parseFile(path);
     const { album, artist, artists, composer, disk, genre, picture, title, track, year } = common;
     const { duration, sampleRate } = format;
@@ -86,6 +87,8 @@ export class Browser {
   }
 
   private async listMusics(path: string): Promise<string[]> {
+    this.logger.debug('listMusics():', path);
+
     if (lstatSync(path).isDirectory()) {
       const res = [];
 
@@ -101,6 +104,8 @@ export class Browser {
   }
 
   private async addImages(musics: Music[]): Promise<Music[]> {
+    this.logger.debug('addImages()');
+
     const promises = [];
     let i = 0;
 
@@ -118,25 +123,25 @@ export class Browser {
           if (!pathExistsSync(coverPath)) {
             await sharp(picture[0].data)
               .resize(220)
-              .webp({quality: 100})
+              .webp({ quality: 100 })
               .toFile(coverPath);
           }
 
           music.imageUrl = `file:///${coverPath.replace(/\\/g, '/')}`;
-          logger.debug(`addImages: ${++i}/${musicToAdd.length} ${music.imageUrl} (from file)`);
+          this.logger.debug(`addImages: ${++i}/${musicToAdd.length} ${music.imageUrl} (from file)`);
         } catch (error) {
-          logger.error(error);
+          this.logger.error(error);
         }
       } else {
-        const promise = previewApi.getPreview(music)
+        const promise = this.previewApi.getPreview(music)
           .then(imageUrl => {
-            logger.debug(`addImages: ${++i}/${musicToAdd.length} ${music.imageUrl} (from lastfm)`);
+            this.logger.debug(`addImages: ${++i}/${musicToAdd.length} ${music.imageUrl} (from lastfm)`);
 
             if (validate.string(imageUrl)) {
               music.imageUrl = imageUrl;
             }
           })
-          .catch(logger.error);
+          .catch(this.logger.error);
 
         promises.push(promise);
       }
@@ -149,7 +154,7 @@ export class Browser {
   }
 
   private async retrieveMetadata(musicPaths: string[]): Promise<Music[]> {
-    logger.info('Retrieves metadata');
+    this.logger.debug('retrieveMetadata()');
 
     const res = [];
     let i = 0;
@@ -160,9 +165,9 @@ export class Browser {
         const readableDuration = moment.utc(metadata.duration * 1000).format('mm:ss');
         res.push({ path, ...metadata, readableDuration });
       } catch (error) {
-        logger.error(path, error);
+        this.logger.error(path, error);
       }
-      logger.debug(`retrieveMetadata: ${++i}/${musicPaths.length}`);
+      this.logger.debug(`retrieveMetadata: ${++i}/${musicPaths.length}`);
     }
 
     return res;

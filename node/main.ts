@@ -13,10 +13,13 @@ export class Main {
   private static mainWindow: BrowserWindow;
 
   static getAppDataPath(): string {
+    logger.debug('getAppDataPath()');
     return app.getPath('userData');
   }
 
   static init(): void {
+    logger.debug('init()');
+
     app.on('ready', () => {
       this.createMainWindow();
 
@@ -75,6 +78,8 @@ export class Main {
   }
 
   private static createMainWindow(): void {
+    logger.debug('createMainWindow()');
+
     this.mainWindow = new BrowserWindow({
       width: 900,
       height: 600,

@@ -7,19 +7,18 @@ import { LASTFM_API_KEY } from './config';
 import { Logger } from './logger';
 import { PromiseQueue } from './promise-queue';
 
-const logger = Logger.create('LastfmApi');
-const queue = PromiseQueue.create(5);
-
 export class LastfmApi {
 
   private cache = {};
   private readonly uri = 'http://ws.audioscrobbler.com/2.0';
 
   static create(): LastfmApi {
-    return new LastfmApi();
+    return new LastfmApi(Logger.create('LastfmApi'), PromiseQueue.create(5));
   }
 
   async getPreview(music: Music): Promise<string | undefined> {
+    this.logger.debug('getPreview()');
+
     const search = encodeURIComponent(`${music.artist} ${music.album}`.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
 
     if (this.cache[search] !== undefined) {
@@ -32,7 +31,7 @@ export class LastfmApi {
     options.qs.album = search;
 
     try {
-      const promise = queue
+      const promise = this.queue
         .enqueue(() => request(options))
         .then(response => {
           const matches = response.results.albummatches.album;
@@ -48,8 +47,13 @@ export class LastfmApi {
       return promise;
 
     } catch (error) {
-      logger.error(error);
+      this.logger.error(error);
     }
+  }
+
+  private constructor(private logger: Logger,
+                      private queue: PromiseQueue) {
+    this.logger.debug('constructor()');
   }
 
   private getBaseRequest(): any {
