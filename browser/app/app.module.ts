@@ -7,7 +7,7 @@ import { DetailsComponent } from './browser/details/details.component';
 import { ControlBarComponent } from './control-bar/control-bar.component';
 import { OutputSelectorComponent } from './control-bar/output-selector/output-selector.component';
 import { BackdropComponent } from './shared/components';
-import { MusicManagerService, MusicPlayerService } from './shared/services';
+import { MusicManagerService, MusicPlayerService, NodeExecutorService } from './shared/services';
 import { TitleBarComponent } from './title-bar/title-bar.component';
 
 @NgModule({
@@ -26,6 +26,7 @@ import { TitleBarComponent } from './title-bar/title-bar.component';
   providers: [
     MusicManagerService,
     MusicPlayerService,
+    NodeExecutorService,
   ],
   bootstrap: [AppComponent],
 })

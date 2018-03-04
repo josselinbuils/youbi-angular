@@ -7,8 +7,7 @@ import { PlayerState } from '../../../../shared/constants';
 import { Music } from '../../../../shared/interfaces';
 
 import { Logger } from './logger';
-
-const ipc = window.require('ipc-promise');
+import { NodeExecutorService } from './node-executor.service';
 
 const STATE_UPDATE_INTERVAL = 60000;
 
@@ -26,6 +25,8 @@ export class MusicPlayerService implements OnInit {
   private timerId: number;
   private timeSubject: Subject<number> = new Subject<number>();
 
+  constructor(private nodeExecutorService: NodeExecutorService) {}
+
   getActiveMusic(): Music {
     logger.debug('getActiveMusic()');
     return this.activeMusic;
@@ -41,7 +42,7 @@ export class MusicPlayerService implements OnInit {
    */
   async getState(): Promise<PlayerState> {
     logger.debug('getState()');
-    const state = await ipc.send('player', 'getState');
+    const state = await this.nodeExecutorService.exec('player', 'getState');
     logger.debug('getState:', state);
     this.setState(state);
     return state;
@@ -87,7 +88,7 @@ export class MusicPlayerService implements OnInit {
     logger.debug('pause()');
 
     if (await this.getState() === PlayerState.Playing) {
-      this.setState(await ipc.send('player', 'pause'));
+      this.setState(await this.nodeExecutorService.exec('player', 'pause'));
 
       if (this.state === PlayerState.Paused) {
         this.stopTimer();
@@ -102,11 +103,13 @@ export class MusicPlayerService implements OnInit {
   async play(musics?: Music[], index?: number): Promise<void> {
     logger.debug('play()');
 
-    if (musics !== undefined) {
-      this.setPlaylist(musics);
-    } else if (this.playlist === undefined) {
+    if (musics === undefined && this.playlist === undefined) {
       throw new Error('No music to play');
-    } else if (this.activeMusic !== undefined && index === undefined) {
+    }
+
+    if (musics !== undefined) {
+      this.playlist = musics;
+    } else if (index === undefined && this.activeMusic !== undefined) {
       index = this.playlist.indexOf(this.activeMusic);
     }
 
@@ -136,10 +139,10 @@ export class MusicPlayerService implements OnInit {
   }
 
   async resume(): Promise<void> {
-    logger.debug('setActiveMusic()');
+    logger.debug('resume()');
 
     if (await this.getState() === PlayerState.Paused) {
-      this.setState(await ipc.send('player', 'resume'));
+      this.setState(await this.nodeExecutorService.exec('player', 'resume'));
 
       if (this.state === PlayerState.Playing) {
         this.startTimer();
@@ -154,10 +157,10 @@ export class MusicPlayerService implements OnInit {
   async seek(timeSeconds: number): Promise<void> {
     logger.debug(`seek(): ${timeSeconds}s`);
 
-    if (await this.getState() === PlayerState.Playing) {
-      this.setState(await ipc.send('player', { name: 'seek', args: [timeSeconds] }));
+    if (await this.getState() !== PlayerState.Stopped) {
+      this.setState(await this.nodeExecutorService.exec('player', 'seek', [timeSeconds]));
 
-      if (this.state === PlayerState.Playing) {
+      if (this.state !== PlayerState.Stopped) {
         this.time = timeSeconds;
         this.timeSubject.next(this.time);
       } else {
@@ -183,33 +186,36 @@ export class MusicPlayerService implements OnInit {
   async stop(): Promise<void> {
     logger.debug('stop()');
 
-    this.stopTimer();
-    this.time = 0;
-    this.timeSubject.next(this.time);
-
     if (await this.getState() !== PlayerState.Stopped) {
-      this.setState(await ipc.send('player', 'stop'));
+      this.setState(await this.nodeExecutorService.exec('player', 'stop'));
     }
+    this.resetTime();
   }
 
   private async playMusic(music: Music): Promise<void> {
     logger.debug('playMusic()');
 
-    if (await this.getState() === PlayerState.Playing) {
-      await this.stop();
-    }
+    this.setState(await this.nodeExecutorService.exec('player', 'play', [music.path]));
 
     if (this.activeMusic !== music) {
       this.setActiveMusic(music);
     }
 
-    this.time = 0;
-    this.setState(await ipc.send('player', { name: 'play', args: [this.activeMusic.path] }));
-
     if (this.state === PlayerState.Playing) {
       this.startTimer();
     } else {
       await this.stop();
+    }
+  }
+
+  private resetTime(): void {
+    logger.debug('resetTime()');
+
+    this.stopTimer();
+
+    if (this.time !== 0) {
+      this.time = 0;
+      this.timeSubject.next(this.time);
     }
   }
 
@@ -223,6 +229,8 @@ export class MusicPlayerService implements OnInit {
 
   private startTimer(): void {
     logger.debug('startTimer()');
+
+    this.resetTime();
 
     this.timerId = window.setInterval(async () => {
       this.time++;
@@ -245,5 +253,6 @@ export class MusicPlayerService implements OnInit {
   private stopTimer(): void {
     logger.debug('stopTimer()');
     window.clearInterval(this.timerId);
+    delete this.timerId;
   }
 }

@@ -3,8 +3,7 @@ import { Injectable } from '@angular/core';
 import { Music } from '../../../../shared/interfaces';
 
 import { Logger } from './logger';
-
-const ipc = window.require('ipc-promise');
+import { NodeExecutorService } from './node-executor.service';
 
 const logger = Logger.create('MusicManagerService');
 
@@ -12,11 +11,13 @@ const logger = Logger.create('MusicManagerService');
 export class MusicManagerService {
   private musicListPromise: Promise<Music[]>;
 
+  constructor(private nodeExecutorService: NodeExecutorService) {}
+
   async getMusicList(): Promise<Music[]> {
     logger.debug('getMusicList()');
 
     if (this.musicListPromise === undefined) {
-      this.musicListPromise = ipc.send('browser', { name: 'getMusicList', args: ['\\\\DISKSTATION\\music'] });
+      this.musicListPromise = this.nodeExecutorService.exec('browser', 'getMusicList', ['\\\\DISKSTATION\\music']);
     }
     return this.musicListPromise;
   }

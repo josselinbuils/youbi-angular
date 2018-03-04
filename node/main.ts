@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import * as ipc from 'ipc-promise';
-// const {join} = require('path');
-// const {format} = require('url');
+
+import { Command } from '../shared/interfaces';
 
 import { Browser } from './browser';
 import { Logger } from './logger';
@@ -28,12 +28,7 @@ export class Main {
       const executors = { browser, player };
 
       Object.entries(executors).forEach(([name, executor]) => {
-        ipc.on(name, async command => {
-
-          if (typeof command === 'string') {
-            command = { name: command };
-          }
-
+        ipc.on(name, async (command: Command) => {
           const logHeader = `${name}->${command.name}`;
 
           logger.debug(`Executes: ${logHeader}()`);

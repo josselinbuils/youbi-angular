@@ -1,51 +1,38 @@
-import { Asset } from 'av';
+import { ChildProcess, fork } from 'child_process';
 import { Readable, Transform } from 'stream';
 import * as through from 'through2';
 
-// Aurora codecs
-// import 'aac';
-import 'alac';
-import 'flac.js';
-import 'mp3';
-import 'ogg.js';
-import 'vorbis.js';
-
+import { Command } from '../shared/interfaces';
 import { delay } from '../shared/utils';
 
 import { Logger } from './logger';
+import { EventStatus, WorkerEvent } from './worker-event';
 
 const SEEK_TIMEOUT_MS = 5000;
 
 export class Decoder {
 
-  asset: Asset;
   audioStream: Transform;
   bufferList: Buffer[];
 
+  private decodingWorker: ChildProcess;
+
   static create(): Decoder {
-    return new Decoder(Logger.create('Decoder'));
+    return new Decoder(Logger.create('Decoder'), Logger.create('DecodingWorker'));
   }
 
   async get(event: string, path: string): Promise<any> {
-    this.logger.debug('get()');
-    return new Promise<any>((resolve, reject) => {
-      this.logger.debug(`Gets ${event} of ${path}`);
-      this.asset = Asset.fromFile(path);
-      this.asset.get(event, resolve);
-      this.asset.on('error', reject);
-    });
+    return this.execInWorker('get', [event, path]);
   }
 
-  isActive(): boolean {
-    const active = this.asset !== undefined && this.asset.active;
-    this.logger.debug('isActive():', active);
-    return active;
+  async isActive(): Promise<boolean> {
+    return this.decodingWorker !== undefined && (await this.execInWorker('isActive')) === true;
   }
 
   async seek(byteOffset: number): Promise<Readable> {
     this.logger.debug('seek():', byteOffset);
 
-    if (this.asset !== undefined && this.asset.decoder !== undefined) {
+    if (await this.execInWorker('hasDecoder')) {
       const startTime = Date.now();
       let buffer = Buffer.concat(this.bufferList);
 
@@ -69,60 +56,84 @@ export class Decoder {
   async start(path: string): Promise<Readable> {
     this.logger.debug('start():', path);
 
-    return new Promise<Readable>(resolve => {
+    if (await this.isActive()) {
+      throw new Error('Decoder active');
+    }
 
-      if (this.isActive()) {
-        throw new Error('Decoder active');
-      }
-
-      this.logger.debug(`Starts decoding ${path}`);
-
-      this.asset = Asset.fromFile(path);
+    try {
       this.audioStream = through();
       this.bufferList = [];
 
-      // Needs to wait for decodeStart event to have asset.decoder defined
-      this.asset.on('decodeStart', () => {
-        this.asset.decoder.on('data', typedArray => {
-          // Converts ArrayBuffer of input TypedArray to Buffer and writes the result into the output stream
-          const buffer = Buffer.from(typedArray.buffer);
-          this.bufferList.push(buffer);
-          this.audioStream.write(buffer);
-        });
-        resolve(this.audioStream);
+      this.decodingWorker.stdout.on('data', (buffer: Buffer) => {
+        this.bufferList.push(buffer);
+        this.audioStream.write(buffer);
       });
 
-      let lastStep = 0;
+    } catch (error) {
+      this.logger.error(error);
+    }
 
-      this.asset.on('buffer', progress => {
-        const step = Math.round(progress / 10);
-
-        if (step > lastStep || progress === 100) {
-          lastStep = step;
-          this.logger.debug(`Decoded ${Math.round(progress)}%`);
-        }
-      });
-
-      this.asset.on('error', error => { throw error; });
-
-      this.asset.start();
-    });
+    await this.execInWorker('start', [path]);
+    return this.audioStream;
   }
 
-  stop(): void {
+  async stop(): Promise<void> {
     this.logger.debug('stop()');
 
-    if (!this.isActive()) {
+    if (!(await this.isActive())) {
       throw new Error('Decoder inactive');
     }
 
-    this.asset.stop();
+    this.replaceWorker();
     this.audioStream.destroy();
     this.bufferList = [];
   }
 
-  private constructor(private logger: Logger) {
+  private constructor(private logger: Logger,
+                      private workerLogger: Logger) {
     logger.debug('constructor()');
+    this.decodingWorker = this.createWorker();
+  }
+
+  private createWorker(): ChildProcess {
+    this.logger.debug('createWorker()');
+
+    const decodingWorker = fork('./dist/node/decoding-worker.js', [], { stdio: ['ipc', 'pipe', 2] });
+
+    decodingWorker.on('message', event => {
+      if (event.name === 'debug') {
+        this.workerLogger.debug(event.data);
+      }
+    });
+
+    return decodingWorker;
+  }
+
+  private async execInWorker(commandName: string, args?: any[]): Promise<any> {
+    return new Promise<any>(resolve => {
+      const listener = (event: WorkerEvent) => {
+        const { data, name, status } = event;
+
+        if (name === 'result') {
+          this.decodingWorker.removeListener('message', listener);
+
+          if (status === EventStatus.Success) {
+            resolve(data);
+          } else {
+            throw new Error(data);
+          }
+        }
+      };
+      this.decodingWorker.addListener('message', listener);
+      const command: Command = { name: commandName, args };
+      this.decodingWorker.send(command);
+    });
+  }
+
+  private replaceWorker(): void {
+    this.logger.debug('replaceWorker()');
+    this.decodingWorker.kill();
+    this.decodingWorker = this.createWorker();
   }
 }
 

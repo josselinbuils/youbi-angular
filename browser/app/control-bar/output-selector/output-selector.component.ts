@@ -3,10 +3,8 @@ import { Component, ElementRef, EventEmitter, Input, Output, Renderer2 } from '@
 import { PlayerState } from '../../../../shared/constants';
 import { AudioApi } from '../../../../shared/interfaces';
 import { MOUSE_BUTTON } from '../../shared/constants';
-import { Logger, MusicPlayerService } from '../../shared/services';
+import { Logger, MusicPlayerService, NodeExecutorService } from '../../shared/services';
 import { closest } from '../../shared/utils';
-
-const ipc = window.require('ipc-promise');
 
 const logger = Logger.create('OutputSelectorComponent');
 
@@ -39,6 +37,7 @@ export class OutputSelectorComponent {
 
   constructor(private hostElementRef: ElementRef,
               private musicPlayerService: MusicPlayerService,
+              private nodeExecutorService: NodeExecutorService,
               private renderer: Renderer2) {}
 
   hide(): void {
@@ -52,27 +51,27 @@ export class OutputSelectorComponent {
 
   async select(api: AudioApi): Promise<void> {
     logger.debug('select():', api.name);
+
+    if (api.id === this.activeApiId) {
+      return;
+    }
+
     try {
       const playerState = await this.musicPlayerService.getState();
       let time: number;
 
       if (playerState !== PlayerState.Stopped) {
         time = this.musicPlayerService.getCurrentTime();
-        await this.musicPlayerService.stop();
       }
 
-      await ipc.send('player', { name: 'selectAudioAPI', args: [api] });
+      await this.nodeExecutorService.exec('player', 'selectAudioAPI', [api]);
       this.activeApiId = api.id;
       this.close.emit();
 
       if (playerState !== PlayerState.Stopped) {
-        await this.musicPlayerService.play();
         await this.musicPlayerService.seek(time);
-
-        if (playerState === PlayerState.Paused) {
-          await this.musicPlayerService.pause();
-        }
       }
+
     } catch (error) {
       logger.error(error);
     }
@@ -80,8 +79,8 @@ export class OutputSelectorComponent {
 
   async show(): Promise<void> {
     logger.debug('show()');
-    this.apiList = await await ipc.send('player', 'getAudioAPIList');
-    const activeApi = await ipc.send('player', 'getActiveAudioAPI');
+    this.apiList = await await this.nodeExecutorService.exec('player', 'getAudioAPIList');
+    const activeApi = await this.nodeExecutorService.exec('player', 'getActiveAudioAPI');
     this.activeApiId = activeApi !== undefined ? activeApi.id : this.apiList.find(api => api.default).id;
     this.shown = true;
     this.destroyMouseDownHandler = this.renderer.listen(this.hostElementRef.nativeElement, 'click', this.clickHandler.bind(this));
