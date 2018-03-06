@@ -1,5 +1,4 @@
 import { createHash } from 'crypto';
-import * as ElectronStore from 'electron-store';
 import { lstatSync, pathExistsSync, readdir } from 'fs-extra';
 import * as moment from 'moment';
 import * as musicMetadata from 'music-metadata';
@@ -13,11 +12,12 @@ import { COVERS_FOLDER } from './constants';
 import { LastfmApi } from './lastfm-api';
 import { Logger } from './logger';
 import { Main } from './main';
+import { Store } from './store';
 
 export class Browser {
 
   static create(): Browser {
-    return new Browser(Logger.create('Browser'), LastfmApi.create(), new ElectronStore());
+    return new Browser(Logger.create('Browser'), LastfmApi.create(), Store.getInstance());
   }
 
   async getMusicList(folderPath: string): Promise<Music[]> {
@@ -70,7 +70,7 @@ export class Browser {
 
   private constructor(private logger: Logger,
                       private previewApi: LastfmApi,
-                      private store: ElectronStore) {
+                      private store: Store) {
     logger.debug('constructor()');
   }
 

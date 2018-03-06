@@ -8,6 +8,7 @@ import { delay } from '../shared/utils';
 
 import { Decoder, DecodingFormat } from './decoder';
 import { Logger } from './logger';
+import { persistent } from './persistent';
 
 const AUDIO_OUTPUT_RETRIES = 2;
 const DEFAULT_API_ID = -1;
@@ -18,7 +19,7 @@ const SILENCE_DURATION_MS = 200;
 
 export class Player {
 
-  private audioApi: AudioApi;
+  @persistent private audioApi: AudioApi;
   private audioOutput: AudioOutput;
   private audioStream;
   private currentMusic?: { format: DecodingFormat };
@@ -164,6 +165,7 @@ export class Player {
         this.audioOutput.start();
       }
     } catch (error) {
+      this.logger.error(error);
       throw new Error('Unable to select audio API');
     }
   }

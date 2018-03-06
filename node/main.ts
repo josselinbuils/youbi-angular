@@ -1,4 +1,5 @@
 import { app, BrowserWindow } from 'electron';
+import * as electronWindowState from 'electron-window-state';
 import * as ipc from 'ipc-promise';
 
 import { Command } from '../shared/interfaces';
@@ -75,15 +76,24 @@ export class Main {
   private static createMainWindow(): void {
     logger.debug('createMainWindow()');
 
+    const mainWindowState = electronWindowState({
+      defaultWidth: 900,
+      defaultHeight: 600,
+    });
+
+    const { width, height } = mainWindowState;
+
     this.mainWindow = new BrowserWindow({
-      width: 900,
-      height: 600,
+      width,
+      height,
       minWidth: 900,
       minHeight: 600,
       frame: false,
       backgroundColor: '#111625',
       webPreferences: { webSecurity: false },
     });
+
+    mainWindowState.manage(this.mainWindow);
 
     // this.window.loadURL(format({
     //   pathname: join(__dirname, '../dist/index.html'),
