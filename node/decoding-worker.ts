@@ -28,6 +28,7 @@ class DecodingWorker {
     this.send(RESULT_EVENT, errorMessage, EventStatus.Error);
   }
 
+  // noinspection JSUnusedLocalSymbols
   private get(event: string, path: string): void {
     this.debug(`get(): ${event} of ${path}`);
     this.asset = Asset.fromFile(path);
@@ -47,7 +48,7 @@ class DecodingWorker {
     process.on('message', (command: Command) => {
       const { name, args } = command;
 
-      if (['get', 'hasDecoder', 'isActive', 'start'].includes(name)) {
+      if (['get', 'hasDecoder', 'isActive', 'start', 'stop'].includes(name)) {
         this[name].apply(this, args);
       } else {
         this.error('Unknown command');
@@ -66,6 +67,7 @@ class DecodingWorker {
     process.send(event);
   }
 
+  // noinspection JSUnusedLocalSymbols
   private start(path: string): void {
     this.debug(`start(): ${path}`);
 
@@ -92,6 +94,13 @@ class DecodingWorker {
 
     this.asset.on('error', error => this.error(error.message));
     this.asset.start();
+  }
+
+  // noinspection JSUnusedLocalSymbols
+  private stop(): void {
+    this.debug('stop()');
+    this.asset.stop();
+    this.success();
   }
 
   private success(data?: any): void {

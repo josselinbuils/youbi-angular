@@ -15,7 +15,7 @@ export class Decoder {
   audioStream: Transform;
   bufferList: Buffer[];
 
-  private decodingWorker: ChildProcess;
+  private decodingWorker = this.createWorker();
 
   static create(): Decoder {
     return new Decoder(Logger.create('Decoder'), Logger.create('DecodingWorker'));
@@ -63,12 +63,6 @@ export class Decoder {
     try {
       this.audioStream = through();
       this.bufferList = [];
-
-      this.decodingWorker.stdout.on('data', (buffer: Buffer) => {
-        this.bufferList.push(buffer);
-        this.audioStream.write(buffer);
-      });
-
     } catch (error) {
       this.logger.error(error);
     }
@@ -84,7 +78,7 @@ export class Decoder {
       throw new Error('Decoder inactive');
     }
 
-    this.replaceWorker();
+    await this.execInWorker('stop');
     this.audioStream.destroy();
     this.bufferList = [];
   }
@@ -92,13 +86,17 @@ export class Decoder {
   private constructor(private logger: Logger,
                       private workerLogger: Logger) {
     logger.debug('constructor()');
-    this.decodingWorker = this.createWorker();
   }
 
   private createWorker(): ChildProcess {
     this.logger.debug('createWorker()');
 
     const decodingWorker = fork('./dist/node/decoding-worker.js', [], { stdio: ['ipc', 'pipe', 2] });
+
+    decodingWorker.stdout.on('data', (buffer: Buffer) => {
+      this.bufferList.push(buffer);
+      this.audioStream.write(buffer);
+    });
 
     decodingWorker.on('message', event => {
       if (event.name === 'debug') {
@@ -128,12 +126,6 @@ export class Decoder {
       const command: Command = { name: commandName, args };
       this.decodingWorker.send(command);
     });
-  }
-
-  private replaceWorker(): void {
-    this.logger.debug('replaceWorker()');
-    this.decodingWorker.kill();
-    this.decodingWorker = this.createWorker();
   }
 }
 
