@@ -5,7 +5,7 @@
   },
   "apps": [
     {
-      "root": "browser",
+      "root": "src/browser",
       "outDir": "dist/browser",
       "assets": [
         "assets",

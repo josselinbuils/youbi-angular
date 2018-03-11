@@ -1,6 +1,8 @@
 import { app, BrowserWindow } from 'electron';
 import * as electronWindowState from 'electron-window-state';
 import * as ipc from 'ipc-promise';
+import { join } from 'path';
+import { format } from 'url';
 
 import { Command } from '../shared/interfaces';
 
@@ -95,14 +97,14 @@ export class Main {
 
     mainWindowState.manage(this.mainWindow);
 
-    // this.window.loadURL(format({
-    //   pathname: join(__dirname, '../dist/index.html'),
-    //   protocol: 'file:',
-    //   slashes: true,
-    // }));
-    this.mainWindow.loadURL('http://localhost:4200', { extraHeaders: 'pragma: no-cache\n' });
+    this.mainWindow.loadURL(format({
+      pathname: join(__dirname, '../browser/index.html'),
+      protocol: 'file:',
+      slashes: true,
+    }));
+    // this.mainWindow.loadURL('http://localhost:4200', { extraHeaders: 'pragma: no-cache\n' });
 
-    this.mainWindow.webContents.openDevTools();
+    // this.mainWindow.webContents.openDevTools();
 
     this.mainWindow.on('closed', () => {
       // Dereference the window object, usually you would store windows in an array if your app supports multi windows, this is the time

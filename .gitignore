@@ -3,6 +3,7 @@
 # compiled output
 /dist
 /dist-server
+/package
 /tmp
 /out-tsc
 
@@ -43,3 +44,4 @@ testem.log
 Thumbs.db
 
 config.ts
+Update.exe

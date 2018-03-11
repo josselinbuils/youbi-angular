@@ -105,9 +105,11 @@ export class Player {
       }
 
     } catch (error) {
-      this.logger.error(`Unable to play: ${error.message}`);
-      this.logger.debug(`Audio output state: active=${this.audioOutput.isActive()} stopped=${this.audioOutput.isStopped()}`);
+      if (this.audioOutput !== undefined) {
+        this.logger.debug(`Audio output state: active=${this.audioOutput.isActive()} stopped=${this.audioOutput.isStopped()}`);
+      }
       await this.stop();
+      throw new Error(`Unable to play: ${error.message}`);
     }
 
     return this.getState();

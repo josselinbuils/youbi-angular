@@ -1,4 +1,5 @@
 import { ChildProcess, fork } from 'child_process';
+import { join } from 'path';
 import { Readable, Transform } from 'stream';
 import * as through from 'through2';
 
@@ -91,7 +92,7 @@ export class Decoder {
   private createWorker(): ChildProcess {
     this.logger.debug('createWorker()');
 
-    const decodingWorker = fork('./dist/node/decoding-worker.js', [], { stdio: ['ipc', 'pipe', 2] });
+    const decodingWorker = fork(join(__dirname, 'decoding-worker.js'), [], { stdio: ['ipc', 'pipe', 2] });
 
     decodingWorker.stdout.on('data', (buffer: Buffer) => {
       this.bufferList.push(buffer);
