@@ -1,9 +1,9 @@
 import { createHash } from 'crypto';
 import { lstatSync, pathExistsSync, readdir } from 'fs-extra';
+import { read } from 'jimp';
 import * as moment from 'moment';
 import * as musicMetadata from 'music-metadata';
 import { join } from 'path';
-import * as sharp from 'sharp';
 
 import { Music } from '../shared/interfaces';
 import { validate } from '../shared/utils';
@@ -15,6 +15,8 @@ import { Main } from './main';
 import { Store } from './store';
 
 export class Browser {
+
+  coversPath = join(Main.getAppDataPath(), COVERS_FOLDER);
 
   static create(): Browser {
     return new Browser(Logger.create('Browser'), LastfmApi.create(), Store.getInstance());
@@ -116,15 +118,14 @@ export class Browser {
 
       if (picture !== undefined && picture[0] !== undefined) {
         try {
-          const coversPath = join(Main.getAppDataPath(), COVERS_FOLDER);
-          const coverFileName = `${music.path.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.webp`;
-          const coverPath = join(coversPath, coverFileName);
+          const image = await read(picture[0].data);
+          const coverFileName = `${image.hash()}.jpg`;
+          const coverPath = join(this.coversPath, coverFileName);
 
           if (!pathExistsSync(coverPath)) {
-            await sharp(picture[0].data)
-              .resize(220)
-              .webp({ quality: 100 })
-              .toFile(coverPath);
+            await image.resize(220, 220)
+              .quality(85)
+              .write(coverPath);
           }
 
           music.imageUrl = `file:///${coverPath.replace(/\\/g, '/')}`;
