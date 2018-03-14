@@ -2,7 +2,7 @@ import { Music } from '../../../../shared/interfaces';
 
 export interface Album {
   artist: string;
-  imageUrl: string;
+  firstLetter: string;
   musics: Music[];
   name: string;
 }

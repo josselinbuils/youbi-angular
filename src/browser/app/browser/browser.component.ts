@@ -54,18 +54,36 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     logger.debug('ngOnInit()');
 
     this.musics = await this.musicManagerService.getMusicList();
+    this.albums = [];
 
-    this.albums = Object.entries(groupBy(this.musics, 'album'))
-      .map(([name, musics]) => {
-        const { artist, imageUrl } = musics[0];
-        return { artist, imageUrl, musics, name };
+    for (const [name, musics] of Object.entries(groupBy(this.musics, 'album'))) {
+      const artist = musics[0].albumArtist !== undefined ? musics[0].albumArtist : musics[0].artist;
+      const firstLetter = artist.slice(0, 1).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const album = { artist, firstLetter, musics, name };
+
+      Object.defineProperty(album, 'coverURL', {
+        enumerable: true,
+        get: () => album.musics[0].coverURL,
       });
+
+      this.albums.push(album);
+    }
+
+    this.albums = this.albums.sort((a, b) => {
+      const artistComparison = a.artist.localeCompare(b.artist);
+      return artistComparison !== 0 ? artistComparison : a.name.localeCompare(b.name);
+    });
+
     logger.debug('Albums:', this.albums);
 
     if (this.albums.length > 0) {
       this.computeLines();
       this.musicPlayerService.setPlaylist(this.albums[0].musics);
     }
+
+    logger.time('retrieveAlbumCovers');
+    await this.musicManagerService.retrieveCovers(this.albums.map(album => album.musics[0]));
+    logger.timeEnd('retrieveAlbumCovers');
   }
 
   @HostListener('window:resize')
@@ -94,9 +112,18 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     logger.debug('toggleDetails()');
 
     if (this.selectedAlbum !== album) {
-      this.colorPalette = validate.string(album.imageUrl)
-        ? (await this.getColorPalette(album.imageUrl)).map(rgb => `rgb(${rgb.join(', ')})`)
-        : ['#293559', '#dee3f0'];
+      const defaultColorPalette = ['#293559', '#dee3f0'];
+
+      try {
+        const coverURL = album.musics[0].coverURL;
+        this.colorPalette = validate.string(coverURL)
+          ? (await this.getColorPalette(coverURL)).map(rgb => `rgb(${rgb.join(', ')})`)
+          : defaultColorPalette;
+      } catch (error) {
+        logger.error(`Unable to compute color palette: ${error.stack}`);
+        this.colorPalette = defaultColorPalette;
+      }
+
       this.selectedAlbum = album;
     } else {
       delete this.selectedAlbum;
@@ -125,14 +152,14 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     }
   }
 
-  private async getColorPalette(imageUrl: string): Promise<number[][]> {
+  private async getColorPalette(coverURL: string): Promise<number[][]> {
     logger.debug('getColorPalette()');
 
     return new Promise<number[][]>(resolve => {
       const img = new Image();
       img.onload = () => resolve(colorThief.getPalette(img, 2));
       img.crossOrigin = 'anonymous';
-      img.src = imageUrl;
+      img.src = coverURL;
     });
   }
 

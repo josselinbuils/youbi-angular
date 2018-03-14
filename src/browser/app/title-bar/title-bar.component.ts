@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-const remote = window.require('electron').remote;
+const getCurrentElectronWindow = (window as any).getCurrentElectronWindow;
 
 @Component({
   selector: 'app-title-bar',
@@ -10,11 +10,11 @@ const remote = window.require('electron').remote;
 export class TitleBarComponent {
 
   close(): void {
-    remote.getCurrentWindow().close();
+    getCurrentElectronWindow().close();
   }
 
   maximize(): void {
-    const window = remote.getCurrentWindow();
+    const window = getCurrentElectronWindow();
 
     if (window.isMaximized()) {
       window.unmaximize();
@@ -24,6 +24,6 @@ export class TitleBarComponent {
   }
 
   minimize(): void {
-    remote.getCurrentWindow().minimize();
+    getCurrentElectronWindow().minimize();
   }
 }

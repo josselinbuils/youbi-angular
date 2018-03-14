@@ -1,5 +1,6 @@
 import { pathExistsSync } from 'fs-extra';
 import { AudioOutput, getAPIList } from 'naudiodon';
+import 'source-map-support/register';
 import { Readable } from 'stream';
 
 import { PlayerState } from '../shared/constants';

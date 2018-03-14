@@ -1,3 +1,5 @@
+import 'source-map-support/register';
+
 export class Deferred {
   promise: Promise<any>;
 

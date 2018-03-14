@@ -1,4 +1,5 @@
 import * as color from 'ansicolor';
+import 'source-map-support/register';
 
 const S_TO_MS = 1e3;
 const NS_TO_MS = 1e-6;

@@ -1,3 +1,5 @@
+import 'source-map-support/register';
+
 import { Store } from './store';
 
 export function persistent(target: any, key: string): void {

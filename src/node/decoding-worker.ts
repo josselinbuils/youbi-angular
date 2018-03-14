@@ -1,6 +1,7 @@
 /* tslint:disable:no-unused-variable */
 
 import { Asset } from 'av';
+import 'source-map-support/register';
 
 // Aurora codecs
 // import 'aac';

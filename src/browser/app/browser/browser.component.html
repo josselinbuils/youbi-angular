@@ -1,8 +1,8 @@
 <div [ngClass]="{show: letter}" class="letter">{{letter}}</div>
 <div *ngFor="let line of albumLines">
-  <div #item class="item" *ngFor="let album of line" [attr.letter]="album.artist.slice(0, 1).toUpperCase()"
-       [ngClass]="{'default-preview fa fa-music': !album.imageUrl, 'selected': album === selectedAlbum}"
-       [style.background-image]="sanitizer.bypassSecurityTrustStyle('url(' + album.imageUrl + ')')"
+  <div #item class="item" *ngFor="let album of line" [attr.letter]="album.firstLetter"
+       [ngClass]="{'default-preview fa fa-music': !album.coverURL, 'selected': album === selectedAlbum}"
+       [style.background-image]="album.coverURL ? 'url(' + album.coverURL + ')' : ''"
        [ngStyle]="{width: itemSize + 'px', height: itemSize + 'px'}"
        (click)="toggleDetails(album)">
     <!--suppress NsUnresolvedStyleClassReference -->

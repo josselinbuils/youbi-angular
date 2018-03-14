@@ -1,4 +1,5 @@
 import * as request from 'request-promise-native';
+import 'source-map-support/register';
 
 import { Music } from '../shared/interfaces';
 import { validate } from '../shared/utils';
@@ -19,7 +20,8 @@ export class LastfmApi {
   async getPreview(music: Music): Promise<string | undefined> {
     this.logger.debug('getPreview()');
 
-    const search = encodeURIComponent(`${music.artist} ${music.album}`.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+    const artist = music.albumArtist !== undefined ? music.albumArtist : music.artist;
+    const search = encodeURIComponent(`${artist} ${music.album}`.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
 
     if (this.cache[search] !== undefined) {
       return this.cache[search];

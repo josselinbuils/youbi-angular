@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron';
 import * as electronWindowState from 'electron-window-state';
 import * as ipc from 'ipc-promise';
 import { join } from 'path';
+import 'source-map-support/register';
 import { format } from 'url';
 
 import { Command } from '../shared/interfaces';
@@ -14,11 +15,6 @@ const logger = Logger.create('Main');
 
 export class Main {
   private static mainWindow: BrowserWindow;
-
-  static getAppDataPath(): string {
-    logger.debug('getAppDataPath()');
-    return app.getPath('userData');
-  }
 
   static init(): void {
     logger.debug('init()');
@@ -49,7 +45,15 @@ export class Main {
               res = await res;
             }
 
-            logger.debug(`Responds: ${logHeader}: ${typeof res !== 'object' ? res : '[object]'}`);
+            let preview = res;
+
+            if (typeof res === 'string') {
+              preview = res.length < 50 ? res : `${res.slice(0, 50)}[...]`;
+            } else if (typeof res === 'object') {
+              preview = '[object]';
+            }
+
+            logger.debug(`Responds: ${logHeader}: ${preview}`);
             return res;
 
           } catch (error) {
@@ -92,7 +96,10 @@ export class Main {
       minHeight: 600,
       frame: false,
       backgroundColor: '#111625',
-      webPreferences: { webSecurity: false },
+      webPreferences: {
+        nodeIntegration: false,
+        preload: join(__dirname, 'preload.js'),
+      },
     });
 
     mainWindowState.manage(this.mainWindow);

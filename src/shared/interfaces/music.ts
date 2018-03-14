@@ -1,14 +1,17 @@
 export interface Music {
   album: string;
+  albumArtist: string;
   artist: string;
   artists: string[];
-  composer: string;
+  comment: string[];
+  composer: string[];
   disk: { no: number; of: number };
   duration: number;
   genre: string[];
-  imageUrl?: string;
+  coverKey?: string;
+  coverURL?: string;
   path: string;
-  picture?: { data: any; format: string };
+  picture?: { data: any; format: string }[];
   readableDuration: string;
   sampleRate: number;
   title: string;

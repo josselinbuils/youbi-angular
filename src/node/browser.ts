@@ -1,25 +1,31 @@
 import { createHash } from 'crypto';
+import * as DataURI from 'datauri';
 import { lstatSync, pathExistsSync, readdir } from 'fs-extra';
-import { read } from 'jimp';
+import * as jimp from 'jimp';
 import * as moment from 'moment';
 import * as musicMetadata from 'music-metadata';
 import { join } from 'path';
+import 'source-map-support/register';
 
 import { Music } from '../shared/interfaces';
 import { validate } from '../shared/utils';
 
-import { COVERS_FOLDER } from './constants';
 import { LastfmApi } from './lastfm-api';
 import { Logger } from './logger';
-import { Main } from './main';
 import { Store } from './store';
 
 export class Browser {
 
-  coversPath = join(Main.getAppDataPath(), COVERS_FOLDER);
+  private covers: { [hash: string]: string };
+  private dataURI: DataURI;
 
   static create(): Browser {
     return new Browser(Logger.create('Browser'), LastfmApi.create(), Store.getInstance());
+  }
+
+  getCoverDataURL(hash: string): string | undefined {
+    this.logger.debug('getCoverDataURL():', hash);
+    return this.covers[hash];
   }
 
   async getMusicList(folderPath: string): Promise<Music[]> {
@@ -41,7 +47,7 @@ export class Browser {
       this.logger.debug('From file system');
 
       this.logger.info(`Lists musics from ${folderPath}`);
-      this.logger.time('listFiles');
+      this.logger.time('listsMusics');
       let musicPaths: string[];
       if (this.store.has('musicPaths')) {
         musicPaths = this.store.get('musicPaths');
@@ -49,22 +55,40 @@ export class Browser {
         musicPaths = (await this.listMusics(folderPath));
         this.store.set('musicPaths', musicPaths);
       }
-      this.logger.timeEnd('listFiles');
+      this.logger.timeEnd('listsMusics');
 
-      this.logger.time('metadata');
-      musics = await this.retrieveMetadata(musicPaths);
-      this.logger.timeEnd('metadata');
+      const startTime = Date.now();
+      let i = 0;
+      musics = [];
 
-      this.logger.time('covers');
-      musics = await this.addImages(musics);
-      this.logger.timeEnd('covers');
+      this.covers = {};
+      this.dataURI = new DataURI();
+
+      this.logger.time('processesMusics');
+      for (const path of musicPaths) {
+        let remainingTime = '';
+
+        if (i > 0) {
+          const now = Date.now();
+          const endTime = now + (musicPaths.length - i) * (now - startTime) / i;
+          remainingTime = ` (${moment().to(endTime, true)} remaining)`;
+        }
+
+        this.logger.debug(`Processes music ${++i}/${musicPaths.length}${remainingTime}`);
+
+        const music = await this.getMusicInfo(path);
+        await this.generateCover(music);
+        delete music.picture;
+        musics.push(music);
+      }
+      this.logger.timeEnd('processesMusics');
 
       const md5 = createHash('md5').update(musicPaths.join('')).digest('hex');
       this.store.set('musicList', { md5, musics });
+      this.store.set('covers', this.covers);
 
       this.logger.info('Music list updated');
     }
-
     this.logger.timeEnd('musicList');
 
     return musics;
@@ -73,15 +97,55 @@ export class Browser {
   private constructor(private logger: Logger,
                       private previewApi: LastfmApi,
                       private store: Store) {
+
     logger.debug('constructor()');
+    this.covers = store.has('covers') ? store.get('covers') : {};
+  }
+
+  private async generateCover(music: Music): Promise<void> {
+    const { picture } = music;
+
+    try {
+      if (picture !== undefined && picture[0] !== undefined) {
+        const hash = createHash('md5').update(picture[0].data).digest('hex');
+
+        if (this.covers[hash] === undefined) {
+          const coverData = await new Promise<any>(async resolve => {
+            (await jimp.read(picture[0].data))
+              .resize(220, 220)
+              .quality(85)
+              .getBuffer('image/jpeg', (error, buffer) => {
+                if (error instanceof Error) {
+                  throw error;
+                }
+                resolve(buffer);
+              });
+          });
+          this.covers[hash] = this.dataURI.format('.jpg', coverData).content;
+        }
+        music.coverKey = hash;
+
+      } else {
+        const coverURL = await this.previewApi.getPreview(music);
+
+        if (validate.string(coverURL)) {
+          music.coverURL = coverURL;
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Unable to generate preview: ${error.stack}`);
+    }
   }
 
   private async getMusicInfo(path: string): Promise<any> {
-    this.logger.debug('getMusicInfo():', path);
     const { common, format } = await musicMetadata.parseFile(path);
-    const { album, artist, artists, composer, disk, genre, picture, title, track, year } = common;
+    const { album, albumartist, artist, artists, comment, composer, disk, genre, picture, title, track, year } = common;
     const { duration, sampleRate } = format;
-    return { album, artist, artists, composer, disk, duration, genre, picture, sampleRate, title, track, year };
+    const readableDuration = moment.utc(duration * 1000).format('mm:ss');
+    return {
+      album, albumArtist: albumartist, artist, artists, comment, composer, disk, duration, genre, path, picture, readableDuration,
+      sampleRate, title, track, year,
+    };
   }
 
   private isSupported(path: string): boolean {
@@ -103,74 +167,5 @@ export class Browser {
       return res.filter(this.isSupported);
     }
     return [path];
-  }
-
-  private async addImages(musics: Music[]): Promise<Music[]> {
-    this.logger.debug('addImages()');
-
-    const promises = [];
-    let i = 0;
-
-    const musicToAdd = musics.filter(music => !validate.string(music.imageUrl));
-
-    for (const music of musicToAdd) {
-      const picture = music.picture;
-
-      if (picture !== undefined && picture[0] !== undefined) {
-        try {
-          const image = await read(picture[0].data);
-          const coverFileName = `${image.hash()}.jpg`;
-          const coverPath = join(this.coversPath, coverFileName);
-
-          if (!pathExistsSync(coverPath)) {
-            await image.resize(220, 220)
-              .quality(85)
-              .write(coverPath);
-          }
-
-          music.imageUrl = `file:///${coverPath.replace(/\\/g, '/')}`;
-          this.logger.debug(`addImages: ${++i}/${musicToAdd.length} ${music.imageUrl} (from file)`);
-        } catch (error) {
-          this.logger.error(error);
-        }
-      } else {
-        const promise = this.previewApi.getPreview(music)
-          .then(imageUrl => {
-            this.logger.debug(`addImages: ${++i}/${musicToAdd.length} ${music.imageUrl} (from lastfm)`);
-
-            if (validate.string(imageUrl)) {
-              music.imageUrl = imageUrl;
-            }
-          })
-          .catch(this.logger.error);
-
-        promises.push(promise);
-      }
-
-      delete music.picture;
-    }
-
-    await Promise.all(promises);
-    return musics;
-  }
-
-  private async retrieveMetadata(musicPaths: string[]): Promise<Music[]> {
-    this.logger.debug('retrieveMetadata()');
-
-    const res = [];
-    let i = 0;
-
-    for (const path of musicPaths) {
-      try {
-        const metadata = await this.getMusicInfo(path);
-        const readableDuration = moment.utc(metadata.duration * 1000).format('mm:ss');
-        res.push({ path, ...metadata, readableDuration });
-      } catch (error) {
-        this.logger.error(path, error);
-      }
-      this.logger.debug(`retrieveMetadata: ${++i}/${musicPaths.length}`);
-    }
-
-    return res;
   }
 }

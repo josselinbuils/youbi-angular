@@ -1,3 +1,5 @@
+import 'source-map-support/register';
+
 import { Deferred } from './deferred';
 import { Logger } from './logger';
 

@@ -1,5 +1,6 @@
 import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
+import 'source-map-support/register';
 import { Readable, Transform } from 'stream';
 import * as through from 'through2';
 
