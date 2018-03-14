@@ -17,6 +17,10 @@ const options = {
   }
 };
 
+console.time('package');
 packager(options)
-  .then(path => console.log(`Success: ${path}`))
+  .then(path => {
+    console.log(`Success: ${path}`);
+    console.timeEnd('package');
+  })
   .catch(error => console.error(error.stack));
