@@ -10,6 +10,7 @@ import { Logger } from './logger';
 import { NodeExecutorService } from './node-executor.service';
 
 const STATE_UPDATE_INTERVAL = 60000;
+const TIMER_INTERVAL = 100;
 
 const logger = Logger.create('MusicPlayerService');
 
@@ -21,7 +22,7 @@ export class MusicPlayerService implements OnInit {
   private playlist: Music[];
   private state: PlayerState;
   private stateSubject: BehaviorSubject<PlayerState> = new BehaviorSubject<PlayerState>(PlayerState.Stopped);
-  private time: number;
+  private timeMs: number;
   private timerId: number;
   private timeSubject: Subject<number> = new Subject<number>();
 
@@ -34,7 +35,7 @@ export class MusicPlayerService implements OnInit {
 
   getCurrentTime(): number {
     logger.debug('getCurrentTime()');
-    return this.time;
+    return this.timeMs;
   }
 
   /**
@@ -161,8 +162,8 @@ export class MusicPlayerService implements OnInit {
       this.setState(await this.nodeExecutorService.exec('player', 'seek', [timeSeconds]));
 
       if (this.state !== PlayerState.Stopped) {
-        this.time = timeSeconds;
-        this.timeSubject.next(this.time);
+        this.timeMs = timeSeconds * 1000;
+        this.timeSubject.next(timeSeconds);
       } else {
         await this.stop();
       }
@@ -193,7 +194,7 @@ export class MusicPlayerService implements OnInit {
   }
 
   private async playMusic(music: Music): Promise<void> {
-    logger.debug('playMusic()');
+    logger.debug('playMusic()', music.path);
 
     this.setState(await this.nodeExecutorService.exec('player', 'play', [music.path]));
 
@@ -202,6 +203,7 @@ export class MusicPlayerService implements OnInit {
     }
 
     if (this.state === PlayerState.Playing) {
+      this.resetTime();
       this.startTimer();
     } else {
       await this.stop();
@@ -213,9 +215,9 @@ export class MusicPlayerService implements OnInit {
 
     this.stopTimer();
 
-    if (this.time !== 0) {
-      this.time = 0;
-      this.timeSubject.next(this.time);
+    if (this.timeMs !== 0) {
+      this.timeMs = 0;
+      this.timeSubject.next(0);
     }
   }
 
@@ -230,24 +232,23 @@ export class MusicPlayerService implements OnInit {
   private startTimer(): void {
     logger.debug('startTimer()');
 
-    this.resetTime();
-
     this.timerId = window.setInterval(async () => {
-      this.time++;
+      this.timeMs += TIMER_INTERVAL;
 
       // Should be done in the node player, find a way!
-      if (this.time >= (this.activeMusic.duration - 1)) {
+      if ((this.timeMs / 1000) >= (this.activeMusic.duration - 1)) {
         if (this.playlist.indexOf(this.activeMusic) < (this.playlist.length - 1)) {
+          this.stopTimer();
           await this.next();
         } else {
           await this.stop();
           await this.next();
         }
       } else {
-        this.timeSubject.next(this.time);
+        this.timeSubject.next(this.timeMs / 1000);
       }
 
-    }, 1000);
+    }, TIMER_INTERVAL);
   }
 
   private stopTimer(): void {
