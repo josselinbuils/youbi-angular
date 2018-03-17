@@ -20,7 +20,7 @@ export class TitleBarComponent implements OnInit {
   }
 
   close(): void {
-    getCurrentElectronWindow().close();
+    this.window.close();
   }
 
   maximize(): void {

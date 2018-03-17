@@ -16,45 +16,66 @@
 .details {
   font-size: .8em;
   margin: 0 0 20px 20px;
-  padding: 25px 0;
+  padding-bottom: 25px;
   box-sizing: border-box;
   cursor: default;
-  display: flex;
-  justify-content: space-between;
   animation: slide-down .1s ease-in-out;
 
-  .column {
-    flex-grow: 1;
-    max-width: 400px;
-    margin: 0 30px;
+  .disk {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 25px;
 
-    .music {
-      padding: 4px 10px;
-      border-radius: 3px;
+    .column {
+      flex-basis: 0;
+      flex-grow: 1;
+      max-width: 400px;
+      margin: 0 30px;
 
-      .duration {
-        float: right;
+      .music {
+        padding: 4px 10px;
+        border-radius: 3px;
+
+        .duration {
+          float: right;
+        }
+
+        .number, .playing {
+          display: inline-block;
+          width: 25px;
+          vertical-align: top;
+        }
+
+        .playing {
+          font-size: 19px;
+          vertical-align: middle;
+        }
+
+        .title {
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
+          max-width: calc(100% - 80px);
+          display: inline-block;
+          vertical-align: top;
+        }
       }
+    }
+  }
 
-      .number, .playing {
-        display: inline-block;
-        width: 25px;
-        vertical-align: top;
-      }
+  .header {
+    padding: 15px 0 0 18px;
 
-      .playing {
-        font-size: 19px;
-        vertical-align: middle;
-      }
+    h2, h4 {
+      display: inline-block;
+      margin: 0;
+    }
 
-      .title {
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-        max-width: calc(100% - 80px);
-        display: inline-block;
-        vertical-align: top;
-      }
+    h4 {
+      margin-left: 15px;
+      font-weight: normal;
+      vertical-align: top;
+      margin-top: 6px;
     }
   }
 }

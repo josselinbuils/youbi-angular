@@ -1,9 +1,9 @@
-<div [ngClass]="{show: letter}" class="letter">{{letter}}</div>
+<div [ngClass]="{ show: letter }" class="letter">{{letter}}</div>
 <div *ngFor="let line of albumLines">
   <div #item class="item" *ngFor="let album of line" [attr.letter]="album.firstLetter"
-       [ngClass]="{'default-preview fa fa-music': !album.coverURL, 'selected': album === selectedAlbum}"
+       [ngClass]="{ 'default-preview fa fa-music': !album.coverURL, 'selected': album === selectedAlbum }"
        [style.background-image]="album.coverURL ? 'url(' + album.coverURL + ')' : ''"
-       [ngStyle]="{width: itemSize + 'px', height: itemSize + 'px'}"
+       [ngStyle]="{ width: itemSize + 'px', height: itemSize + 'px' }"
        (click)="toggleDetails(album)">
     <!--suppress NsUnresolvedStyleClassReference -->
     <div [attr.style]="sanitizer.bypassSecurityTrustStyle('--details-background: ' + colorPalette[0])"

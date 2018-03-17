@@ -59,7 +59,8 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     for (const [name, musics] of Object.entries(groupBy(this.musics, 'album'))) {
       const artist = musics[0].albumArtist !== undefined ? musics[0].albumArtist : musics[0].artist;
       const firstLetter = artist.slice(0, 1).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const album = { artist, firstLetter, musics, name };
+      const year = musics[0].year;
+      const album = { artist, firstLetter, musics, name, year };
 
       Object.defineProperty(album, 'coverURL', {
         enumerable: true,

@@ -1,8 +1,8 @@
-<div class="backdrop" [ngClass]="{show: shown}"></div>
-<div class="output-selector" [ngClass]="{show: shown}">
+<div class="backdrop" [ngClass]="{ show: shown }"></div>
+<div class="output-selector" [ngClass]="{ show: shown }">
   <div class="header">Output</div>
   <div class="body">
-    <div *ngFor="let api of apiList" [ngClass]="{active: api.id === activeApiId}" (click)="select(api)" class="output">
+    <div *ngFor="let api of apiList" [ngClass]="{ active: api.id === activeApiId }" (click)="select(api)" class="output">
       {{api.name}}
     </div>
   </div>

@@ -5,4 +5,5 @@ export interface Album {
   firstLetter: string;
   musics: Music[];
   name: string;
+  year?: number;
 }
