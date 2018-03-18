@@ -8,7 +8,6 @@ export interface Music {
   disk: { no: number; of: number };
   duration: number;
   genre: string[];
-  coverKey?: string;
   coverURL?: string;
   path: string;
   picture?: { data: any; format: string }[];

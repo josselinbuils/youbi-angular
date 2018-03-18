@@ -16,6 +16,11 @@ const logger = Logger.create('Main');
 export class Main {
   private static mainWindow: BrowserWindow;
 
+  static getAppDataPath(): string {
+    logger.debug('getAppDataPath()');
+    return app.getPath('userData');
+  }
+
   static init(): void {
     logger.debug('init()');
 

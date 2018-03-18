@@ -38,6 +38,7 @@ export class BrowserComponent implements AfterContentInit, OnInit {
 
   private intersectionObserver: IntersectionObserver;
   private scrolling = false;
+  private debouncedResizeEndHandler = debounce(this.resizeEndHandler, 50);
   private debouncedScrollEndHandler = debounce(this.scrollEndHandler, 500);
 
   constructor(public sanitizer: DomSanitizer,
@@ -47,7 +48,7 @@ export class BrowserComponent implements AfterContentInit, OnInit {
 
   ngAfterContentInit(): void {
     logger.debug('ngAfterContentInit()');
-    this.computeItemSize();
+    this.resizeEndHandler();
   }
 
   async ngOnInit(): Promise<void> {
@@ -57,17 +58,10 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     this.albums = [];
 
     for (const [name, musics] of Object.entries(groupBy(this.musics, 'album'))) {
-      const artist = musics[0].albumArtist !== undefined ? musics[0].albumArtist : musics[0].artist;
+      const { albumArtist, coverURL, year } = musics[0];
+      const artist = albumArtist !== undefined ? albumArtist : musics[0].artist;
       const firstLetter = artist.slice(0, 1).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const year = musics[0].year;
-      const album = { artist, firstLetter, musics, name, year };
-
-      Object.defineProperty(album, 'coverURL', {
-        enumerable: true,
-        get: () => album.musics[0].coverURL,
-      });
-
-      this.albums.push(album);
+      this.albums.push({ artist, coverURL, firstLetter, musics, name, year });
     }
 
     this.albums = this.albums.sort((a, b) => {
@@ -81,15 +75,10 @@ export class BrowserComponent implements AfterContentInit, OnInit {
       this.computeLines();
       this.musicPlayerService.setPlaylist(this.albums[0].musics);
     }
-
-    logger.time('retrieveAlbumCovers');
-    await this.musicManagerService.retrieveCovers(this.albums.map(album => album.musics[0]));
-    logger.timeEnd('retrieveAlbumCovers');
   }
 
-  @HostListener('window:resize')
-  resizeHandler(): void {
-    logger.debug('resizeHandler()');
+  resizeEndHandler(): void {
+    logger.debug('resizeEndHandler()');
 
     const itemsByLine = this.itemsByLine;
     this.computeItemSize();
@@ -99,10 +88,13 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     }
   }
 
+  @HostListener('window:resize')
+  resizeHandler(): void {
+    this.debouncedResizeEndHandler();
+  }
+
   @HostListener('scroll')
   scrollHandler(): void {
-    logger.debug('scrollHandler()');
-
     if (!this.scrolling) {
       this.scrollStartHandler();
     }

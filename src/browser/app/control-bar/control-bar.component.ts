@@ -3,7 +3,7 @@ import * as moment from 'moment';
 
 import { PlayerState } from '../../../shared/constants';
 import { Music } from '../../../shared/interfaces';
-import { Logger, MusicManagerService, MusicPlayerService } from '../shared/services';
+import { Logger, MusicPlayerService } from '../shared/services';
 
 const THUMB_WIDTH = 10;
 
@@ -29,8 +29,7 @@ export class ControlBarComponent implements OnInit {
   seeking: boolean;
   showOutputSelector = false;
 
-  constructor(private musicManagerService: MusicManagerService,
-              private musicPlayerService: MusicPlayerService,
+  constructor(private musicPlayerService: MusicPlayerService,
               private renderer: Renderer2) {}
 
   async next(): Promise<void> {
@@ -47,11 +46,6 @@ export class ControlBarComponent implements OnInit {
       .onActiveMusicChange()
       .subscribe(async music => {
         logger.debug('->onActiveMusicChange');
-
-        if (music.coverURL === undefined && music.coverKey !== undefined) {
-          await this.musicManagerService.retrieveCovers([music]);
-        }
-
         this.reset();
         this.activeMusic = music;
         this.readableDuration = moment.utc(this.activeMusic.duration * 1000).format('mm:ss');
