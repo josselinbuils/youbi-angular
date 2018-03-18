@@ -19,25 +19,29 @@ const logger = Logger.create('DetailsComponent');
   styleUrls: ['./details.component.scss'],
 })
 export class DetailsComponent implements OnInit {
-  @Input() set album(album: Album) {
-    this.currentAlbum = album;
-    this.disks = [];
+  @Input() set album(album: Album | undefined) {
+    if (album !== undefined) {
+      this.currentAlbum = album;
+      this.disks = [];
 
-    if (this.validateDiskInfo(album.musics)) {
-      for (let i = 1; i <= album.musics[0].disk.of; i++) {
-        const diskMusics = album.musics.filter(music => music.disk.no === i);
-        this.disks.push(this.computeColumns(diskMusics));
+      if (this.validateDiskInfo(album.musics)) {
+        for (let i = 1; i <= album.musics[0].disk.of; i++) {
+          const diskMusics = album.musics.filter(music => music.disk.no === i);
+          this.disks.push(this.computeColumns(diskMusics));
+        }
+      } else {
+        this.disks.push(this.computeColumns(album.musics));
       }
-    } else {
-      this.disks.push(this.computeColumns(album.musics));
     }
   }
 
-  @Input() set colorPalette(palette: string[]) {
-    this.backgroundStyle = palette[0];
-    this.selectedBackgroundStyle = palette[1];
-    this.textStyle = palette[1];
-    this.selectedTextStyle = palette[0];
+  @Input() set colorPalette(palette: string[] | undefined) {
+    if (palette !== undefined) {
+      this.backgroundStyle = palette[0];
+      this.selectedBackgroundStyle = palette[1];
+      this.textStyle = palette[1];
+      this.selectedTextStyle = palette[0];
+    }
   }
 
   @Input() width: number;
@@ -47,7 +51,7 @@ export class DetailsComponent implements OnInit {
   activeMusic: Music;
   backgroundStyle: string;
   currentAlbum: Album;
-  disks: Music[][][];
+  disks: Column[][];
   selected: Music;
   selectedBackgroundStyle: string;
   selectedTextStyle: string;
@@ -81,7 +85,7 @@ export class DetailsComponent implements OnInit {
     this.selected = music;
   }
 
-  private computeColumns(musics: Music[]): Music[][] {
+  private computeColumns(musics: Music[]): Column[] {
     logger.debug('computeColumns()');
 
     const style = window.getComputedStyle(this.detailsElementRef.nativeElement);
@@ -91,11 +95,15 @@ export class DetailsComponent implements OnInit {
       containerWidth, COLUMN_MARGIN_PX, PREFERRED_COLUMN_WIDTH_PX, MIN_COLUMNS_BY_ROW, MAX_COLUMNS_BY_ROW,
     );
     const musicsByColumn = Math.ceil(musics.length / itemsByLine);
+    const width = `calc(${(100 / itemsByLine).toFixed(2)}% - 60px)`;
     const columns = [];
     let start = 0;
 
     for (let i = 1; i <= itemsByLine; i++) {
-      columns.push(musics.slice(start, start + musicsByColumn));
+      columns.push({
+        musics: musics.slice(start, start + musicsByColumn),
+        width,
+      });
       start += musicsByColumn;
     }
     return columns;
@@ -104,4 +112,9 @@ export class DetailsComponent implements OnInit {
   private validateDiskInfo(musics: Music[]): boolean {
     return !musics.some(music => typeof music.disk.no !== 'number' || typeof music.disk.of !== 'number');
   }
+}
+
+interface Column {
+  musics: Music[];
+  width: string;
 }

@@ -4,9 +4,10 @@
     <h4>{{currentAlbum.artist}}<span *ngIf="currentAlbum.year"> ({{currentAlbum.year}})</span></h4>
   </div>
   <div *ngFor="let disk of disks" class="disk">
-    <div *ngFor="let column of disk" class="column">
-      <div *ngFor="let music of column" [ngClass]="{ selected: music === selected }" class="music"
-           [ngStyle]="{ background: music === selected ? selectedBackgroundStyle : 'none', color: music === selected ? selectedTextStyle : textStyle }"
+    <div *ngFor="let column of disk" class="column" [ngStyle]="{ width: column.width }">
+      <div *ngFor="let music of column.musics" [ngClass]="{ selected: music === selected }" class="music"
+           [style.background]="music === selected ? selectedBackgroundStyle : 'none'"
+           [style.color]="music === selected ? selectedTextStyle : textStyle"
            (click)="select(music)" (dblclick)="play(currentAlbum.musics, currentAlbum.musics.indexOf(music))">
       <span *ngIf="music !== activeMusic || playerState !== PlayerState.Playing"
             class="number">{{music.track.no}}</span>

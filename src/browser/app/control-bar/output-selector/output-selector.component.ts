@@ -15,8 +15,8 @@ const logger = Logger.create('OutputSelectorComponent');
 })
 export class OutputSelectorComponent {
 
-  @Input('show')
-  set showSetter(show: boolean) {
+  @Input()
+  set showSelector(show: boolean) {
     if (this.shown !== show) {
       if (show) {
         // tslint:disable-next-line

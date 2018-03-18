@@ -1,5 +1,23 @@
 @import '../colors';
 
+@keyframes show {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hide {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 :host {
   display: block;
   overflow-y: auto;
@@ -35,18 +53,23 @@
       }
     }
 
-    &.selected .caret {
-      --details-background: $secondary-color;
+    .caret {
+      animation: hide .05s ease-out;
 
-      &:after {
-        content: '\A';
-        border-style: solid;
-        border-width: 0 10px 15px 10px;
-        border-color: transparent transparent var(--details-background) transparent;
-        position: absolute;
-        left: 50%;
-        margin-left: -8px;
-        bottom: -25px;
+      &.shown {
+        --details-background: $secondary-color;
+        animation: show .05s ease-in;
+
+        &:after {
+          content: '\A';
+          border-style: solid;
+          border-width: 0 10px 15px 10px;
+          border-color: transparent transparent var(--details-background) transparent;
+          position: absolute;
+          left: 50%;
+          margin-left: -8px;
+          bottom: -23px;
+        }
       }
     }
   }

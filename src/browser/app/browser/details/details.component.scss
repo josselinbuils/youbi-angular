@@ -1,11 +1,30 @@
 @import '../../colors';
 
+$duration: 0.15s;
+
 @keyframes slide-down {
-  from {
+  0% {
     max-height: 0;
+    opacity: 0;
   }
-  to {
+  33% {
+    opacity: 1;
+  }
+  100% {
     max-height: 1000px;
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    max-height: 1000px;
+    opacity: 1;
+  }
+  33% {
+    opacity: 0;
+  }
+  100% {
+    max-height: 0;
   }
 }
 
@@ -13,24 +32,34 @@
   user-select: none;
 }
 
-.details {
-  font-size: .8em;
+:host(.shown) .details {
+  animation: slide-down $duration ease-in;
+  max-height: 1000px;
   margin: 0 0 20px 20px;
   padding-bottom: 25px;
+  opacity: 1;
+}
+
+.details {
+  font-size: .8em;
+  margin-left: 20px;
+  padding-bottom: 0;
   box-sizing: border-box;
   cursor: default;
-  animation: slide-down .1s ease-in-out;
+  transition: margin-bottom $duration ease-out,  padding-bottom $duration ease-out;
+  animation: slide-up $duration ease-out;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
 
   .disk {
-    display: flex;
-    justify-content: space-between;
     padding-top: 25px;
 
     .column {
-      flex-basis: 0;
-      flex-grow: 1;
+      display: inline-block;
       max-width: 400px;
       margin: 0 30px;
+      vertical-align: top;
 
       .music {
         padding: 4px 10px;
