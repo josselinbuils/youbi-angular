@@ -10,7 +10,7 @@ import { Logger } from './logger';
 import { NodeExecutorService } from './node-executor.service';
 
 const STATE_UPDATE_INTERVAL = 60000;
-const TIMER_INTERVAL = 100;
+const TIMER_INTERVAL = 50;
 
 const logger = Logger.create('MusicPlayerService');
 
@@ -232,11 +232,15 @@ export class MusicPlayerService implements OnInit {
   private startTimer(): void {
     logger.debug('startTimer()');
 
+    let lastTime = performance.now();
+
     this.timerId = window.setInterval(async () => {
-      this.timeMs += TIMER_INTERVAL;
+      const now = performance.now();
+      this.timeMs += Math.round(now - lastTime);
+      lastTime = now;
 
       // Should be done in the node player, find a way!
-      if ((this.timeMs / 1000) >= (this.activeMusic.duration - 1)) {
+      if (this.timeMs >= (this.activeMusic.duration * 1000 - TIMER_INTERVAL * 2)) {
         if (this.playlist.indexOf(this.activeMusic) < (this.playlist.length - 1)) {
           this.stopTimer();
           await this.next();
