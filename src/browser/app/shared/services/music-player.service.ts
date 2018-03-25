@@ -9,6 +9,7 @@ import { Music } from '../../../../shared/interfaces';
 import { Logger } from './logger';
 import { NodeExecutorService } from './node-executor.service';
 
+const SAFE_END_DELAY = 500;
 const STATE_UPDATE_INTERVAL = 60000;
 const TIMER_INTERVAL = 50;
 
@@ -240,7 +241,7 @@ export class MusicPlayerService implements OnInit {
       lastTime = now;
 
       // Should be done in the node player, find a way!
-      if (this.timeMs >= (this.activeMusic.duration * 1000 - TIMER_INTERVAL * 2)) {
+      if (this.timeMs >= (this.activeMusic.duration * 1000 - SAFE_END_DELAY)) {
         if (this.playlist.indexOf(this.activeMusic) < (this.playlist.length - 1)) {
           this.stopTimer();
           await this.next();
