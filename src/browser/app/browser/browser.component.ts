@@ -119,11 +119,11 @@ export class BrowserComponent implements AfterContentInit, OnInit {
 
       const newAlbumLine = this.albumLines.find(albumLine => albumLine.includes(album));
 
-      if (!newAlbumLine.includes(this.selectedAlbum)) {
-        delete this.selectedAlbum;
-        setTimeout(() => this.selectedAlbum = album);
-      } else {
+      if (this.selectedAlbum === undefined || newAlbumLine.includes(this.selectedAlbum)) {
         this.selectedAlbum = album;
+      } else {
+        delete this.selectedAlbum;
+        setTimeout(() => this.selectedAlbum = album, 150);
       }
     } else {
       delete this.selectedAlbum;

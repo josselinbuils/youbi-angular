@@ -27,7 +27,7 @@ export class ShowDirective {
     }
   }
 
-  @Input() duration: number = 150;
+  @Input() duration: number = 100;
 
   private embeddedViewRef: EmbeddedViewRef<any> | undefined;
   private hideTimeout: number;
