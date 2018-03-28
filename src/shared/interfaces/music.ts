@@ -5,7 +5,7 @@ export interface Music {
   artists: string[];
   comment: string[];
   composer: string[];
-  disk: { no: number; of: number };
+  disk: { no?: number; of?: number };
   duration: number;
   genre: string[];
   coverURL?: string;

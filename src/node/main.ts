@@ -102,6 +102,7 @@ export class Main {
       frame: false,
       backgroundColor: '#111625',
       webPreferences: {
+        experimentalFeatures: true,
         nodeIntegration: false,
         preload: join(__dirname, 'preload.js'),
       },
@@ -115,8 +116,6 @@ export class Main {
       slashes: true,
     }));
     // this.mainWindow.loadURL('http://localhost:4200', { extraHeaders: 'pragma: no-cache\n' });
-
-    // this.mainWindow.webContents.openDevTools();
 
     this.mainWindow.on('closed', () => {
       // Dereference the window object, usually you would store windows in an array if your app supports multi windows, this is the time

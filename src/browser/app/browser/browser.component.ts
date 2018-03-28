@@ -1,7 +1,7 @@
 import { AfterContentInit, Component, ElementRef, HostListener, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import * as ColorThief from 'color-thief-browser';
-import { debounce } from 'lodash';
+import debounce from 'lodash-es/debounce';
 
 import { Music } from '../../../shared/interfaces';
 import { validate } from '../../../shared/utils';
@@ -117,7 +117,14 @@ export class BrowserComponent implements AfterContentInit, OnInit {
         this.colorPalette = defaultColorPalette;
       }
 
-      this.selectedAlbum = album;
+      const newAlbumLine = this.albumLines.find(albumLine => albumLine.includes(album));
+
+      if (!newAlbumLine.includes(this.selectedAlbum)) {
+        delete this.selectedAlbum;
+        setTimeout(() => this.selectedAlbum = album);
+      } else {
+        this.selectedAlbum = album;
+      }
     } else {
       delete this.selectedAlbum;
     }

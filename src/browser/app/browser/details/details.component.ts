@@ -1,4 +1,5 @@
-import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { AfterContentInit, Component, ElementRef, Input, OnInit, Renderer2, ViewChild } from '@angular/core';
+import debounce from 'lodash-es/debounce';
 
 import { PlayerState } from '../../../../shared/constants';
 import { Music } from '../../../../shared/interfaces';
@@ -18,7 +19,7 @@ const logger = Logger.create('DetailsComponent');
   templateUrl: './details.component.html',
   styleUrls: ['./details.component.scss'],
 })
-export class DetailsComponent implements OnInit {
+export class DetailsComponent implements AfterContentInit, OnInit {
   @Input() set album(album: Album | undefined) {
     if (album !== undefined) {
       this.currentAlbum = album;
@@ -59,8 +60,16 @@ export class DetailsComponent implements OnInit {
   PlayerState = PlayerState;
   textStyle: string;
 
-  constructor(private musicPlayerService: MusicPlayerService) {
+  private debouncedResizeEndHandler = debounce(this.resizeEndHandler, 50);
+
+  constructor(private musicPlayerService: MusicPlayerService,
+              private renderer: Renderer2) {
     this.activeMusic = musicPlayerService.getActiveMusic();
+  }
+
+  ngAfterContentInit(): void {
+    new (window as any).ResizeObserver(entries => this.debouncedResizeEndHandler(entries[0].contentRect))
+      .observe(this.detailsElementRef.nativeElement);
   }
 
   ngOnInit(): void {
@@ -107,6 +116,14 @@ export class DetailsComponent implements OnInit {
       start += musicsByColumn;
     }
     return columns;
+  }
+
+  private resizeEndHandler(contentRect: ClientRect): void {
+    if (contentRect.height > 0) {
+      const detailsElement = this.detailsElementRef.nativeElement;
+      const style = `${detailsElement.getAttribute('style')} --max-height: ${contentRect.height + 20}px`;
+      this.renderer.setAttribute(detailsElement, 'style', style);
+    }
   }
 
   private validateDiskInfo(musics: Music[]): boolean {

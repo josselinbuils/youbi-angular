@@ -1,6 +1,9 @@
 @import '../../colors';
 
-$duration: 0.15s;
+$slide-down-duration: 0.20s;
+$slide-down-effect: ease-in;
+$slide-up-duration: 0.10s;
+$slide-up-effect: ease-out;
 
 @keyframes slide-down {
   0% {
@@ -17,10 +20,10 @@ $duration: 0.15s;
 
 @keyframes slide-up {
   0% {
-    max-height: 1000px;
+    max-height: var(--max-height);
     opacity: 1;
   }
-  33% {
+  66% {
     opacity: 0;
   }
   100% {
@@ -33,7 +36,8 @@ $duration: 0.15s;
 }
 
 :host(.shown) .details {
-  animation: slide-down $duration ease-in;
+  transition: margin-bottom $slide-down-duration $slide-down-effect, padding-bottom $slide-down-duration $slide-down-effect;
+  animation: slide-down $slide-down-duration $slide-down-effect;
   max-height: 1000px;
   margin: 0 0 20px 20px;
   padding-bottom: 25px;
@@ -46,8 +50,8 @@ $duration: 0.15s;
   padding-bottom: 0;
   box-sizing: border-box;
   cursor: default;
-  transition: margin-bottom $duration ease-out,  padding-bottom $duration ease-out;
-  animation: slide-up $duration ease-out;
+  transition: margin-bottom $slide-up-duration $slide-up-effect, padding-bottom $slide-up-duration $slide-up-effect;
+  animation: slide-up $slide-up-duration $slide-up-effect;
   overflow: hidden;
   max-height: 0;
   opacity: 0;
