@@ -139,7 +139,7 @@ export class Browser {
   }
 
   private isSupported(path: string): boolean {
-    return /\.(aac|aif|m4a|mp3|ogg|wav)$/i.test(path);
+    return /\.(aac|aif|flac|m4a|mp3|ogg|wav)$/i.test(path);
   }
 
   private async listMusics(path: string): Promise<string[]> {
