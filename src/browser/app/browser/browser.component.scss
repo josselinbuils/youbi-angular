@@ -56,6 +56,7 @@
   }
 
   .line {
+    font-size: 0;
     overflow: hidden;
     white-space: nowrap;
 
@@ -64,9 +65,10 @@
       width: 200px;
       height: 200px;
       background-size: contain;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       margin-left: 20px;
       position: relative;
+      vertical-align: top;
 
       &.default-preview {
         font-size: 90px;

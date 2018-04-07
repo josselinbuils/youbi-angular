@@ -60,8 +60,8 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     for (const [name, musics] of Object.entries(groupBy(this.musics, 'album'))) {
       const { albumArtist, coverURL, year } = musics[0];
       const artist = albumArtist !== undefined ? albumArtist : musics[0].artist;
-      const firstLetter = artist.slice(0, 1).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      this.albums.push({ artist, coverURL, firstLetter, musics, name, year });
+      const firstArtistLetter = artist.slice(0, 1).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      this.albums.push({ artist, coverURL, firstArtistLetter, musics, name, year });
     }
 
     this.albums = this.albums.sort((a, b) => {
@@ -169,14 +169,14 @@ export class BrowserComponent implements AfterContentInit, OnInit {
 
     if (this.items !== undefined) {
       this.intersectionObserver = new IntersectionObserver((intersections) => {
-        const intersection = intersections.find(i => i.isIntersecting);
+        const intersection = intersections.reverse().find(i => i.isIntersecting);
 
         if (intersection !== undefined) {
           this.letter = intersection.target.getAttribute('letter');
         }
       }, {
         root: this.hostElementRef.nativeElement,
-        rootMargin: '0px 0px -95% 0px',
+        rootMargin: '0px 0px -90% 0px',
       });
 
       this.items.forEach(item => this.intersectionObserver.observe(item.nativeElement));

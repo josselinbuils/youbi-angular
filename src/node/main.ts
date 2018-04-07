@@ -110,18 +110,26 @@ export class Main {
 
     mainWindowState.manage(this.mainWindow);
 
-    this.mainWindow.loadURL(format({
-      pathname: join(__dirname, '../browser/index.html'),
-      protocol: 'file:',
-      slashes: true,
-    }));
-    // this.mainWindow.loadURL('http://localhost:4200', { extraHeaders: 'pragma: no-cache\n' });
+    if (this.isDev()) {
+      this.mainWindow.loadURL('http://localhost:4200', { extraHeaders: 'pragma: no-cache\n' });
+      this.mainWindow.webContents.openDevTools();
+    } else {
+      this.mainWindow.loadURL(format({
+        pathname: join(__dirname, '../browser/index.html'),
+        protocol: 'file:',
+        slashes: true,
+      }));
+    }
 
     this.mainWindow.on('closed', () => {
       // Dereference the window object, usually you would store windows in an array if your app supports multi windows, this is the time
       // when you should delete the corresponding element.
       delete this.mainWindow;
     });
+  }
+
+  private static isDev(): boolean {
+    return (process.defaultApp || /node_modules[\\/]electron[\\/]/.test(process.execPath));
   }
 }
 
