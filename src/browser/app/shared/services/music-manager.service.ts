@@ -18,7 +18,7 @@ export class MusicManagerService {
     logger.debug('getMusicList()');
 
     if (this.musicListPromise === undefined) {
-      this.musicListPromise = this.nodeExecutorService.exec('browser', 'getMusicList', ['\\\\DISKSTATION\\music']);
+      this.musicListPromise = this.nodeExecutorService.exec('browser', 'getMusicList', ['/Volumes/music']);
     }
     return this.musicListPromise;
   }
