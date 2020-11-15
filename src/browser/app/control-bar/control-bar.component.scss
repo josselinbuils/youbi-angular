@@ -6,7 +6,7 @@
 }
 
 .control-bar {
-  font-size: .8em;
+  font-size: 0.8em;
   overflow: hidden;
   color: $text-color;
   display: flex;
@@ -16,12 +16,14 @@
   background: lighten($background-color, 5%);
   border-top: 1px solid darken($background-color, 5%);
 
-  &.seeking .bar, .progress-bar:hover .bar {
+  &.seeking .bar,
+  .progress-bar:hover .bar {
     background: $primary-color !important;
   }
 
-  &.seeking .bar:after, .progress-bar:hover .bar:after {
-    content: "";
+  &.seeking .bar:after,
+  .progress-bar:hover .bar:after {
+    content: '';
     background: $primary-color;
     width: 10px;
     height: 10px;
@@ -43,7 +45,8 @@
       margin-left: 0 !important;
     }
 
-    &:active, &.checked {
+    &:active,
+    &.checked {
       color: $primary-color;
     }
 
@@ -68,11 +71,13 @@
           line-height: 42px;
         }
 
-        &.prev-button, &.next-button {
+        &.prev-button,
+        &.next-button {
           font-size: 20px;
         }
 
-        &.random-button, &.repeat-button {
+        &.random-button,
+        &.repeat-button {
           font-size: 15px;
           margin-top: 1px;
         }
@@ -90,9 +95,10 @@
         margin-right: 5px;
       }
 
-      .current-time, .duration {
+      .current-time,
+      .duration {
         text-align: center;
-        font-size: .8em;
+        font-size: 0.8em;
         line-height: 16px;
       }
 
@@ -108,7 +114,8 @@
         .bar-container {
           background: $secondary-color;
 
-          &, .bar {
+          &,
+          .bar {
             height: 4px;
             border-radius: 2px;
           }
@@ -123,7 +130,8 @@
     }
   }
 
-  .left, .right {
+  .left,
+  .right {
     flex: 0 1 250px;
   }
 
@@ -138,14 +146,15 @@
       width: 158px;
       margin-left: 12px;
 
-      .name, .artist {
+      .name,
+      .artist {
         @extend .text-ellipsis;
         user-select: text;
         margin-top: 5px;
       }
 
       .artist {
-        font-size: .8em;
+        font-size: 0.8em;
       }
     }
 

@@ -2,7 +2,6 @@ import * as ElectronStore from 'electron-store';
 import 'source-map-support/register';
 
 export class Store {
-
   static instance: Store;
 
   static getInstance(): Store {

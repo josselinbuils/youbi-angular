@@ -9,18 +9,18 @@ const options = {
   platform: process.argv[2],
   arch: 'x64',
   overwrite: true,
-  ignore: path => {
+  ignore: (path) => {
     if (!path) {
       return false;
     }
-    return !keep.some(p => path.indexOf(p) === 0);
-  }
+    return !keep.some((p) => path.indexOf(p) === 0);
+  },
 };
 
 console.time('package');
 packager(options)
-  .then(path => {
+  .then((path) => {
     console.log(`Success: ${path}`);
     console.timeEnd('package');
   })
-  .catch(error => console.error(error.stack));
+  .catch((error) => console.error(error.stack));

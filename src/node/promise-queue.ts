@@ -34,14 +34,14 @@ export class PromiseQueue {
 
   private exec(element: QueueElement): void {
     try {
-      const promise = element.handler()
+      const promise = element
+        .handler()
         .then(element.deferred.resolve)
         .catch(element.deferred.reject)
         .then(() => this.pool.splice(this.pool.indexOf(promise), 1))
         .then(() => this.dequeue());
 
       this.pool.push(promise);
-
     } catch (error) {
       logger.error(error);
     }

@@ -19,7 +19,6 @@ const DEFAULT_SAMPLE_RATE = 44100;
 const SILENCE_DURATION_MS = 200;
 
 export class Player {
-
   @persistent private audioApi: AudioApi;
   private audioOutput: AudioOutput;
   private audioStream;
@@ -47,7 +46,7 @@ export class Player {
         if (this.audioOutput.isActive()) {
           state = PlayerState.Playing;
         }
-        if (await this.decoder.isActive() && this.audioOutput.isStopped()) {
+        if ((await this.decoder.isActive()) && this.audioOutput.isStopped()) {
           state = PlayerState.Paused;
         }
       }
@@ -66,7 +65,7 @@ export class Player {
   async pause(): Promise<PlayerState> {
     this.logger.debug('pause()');
 
-    if (await this.getState() === PlayerState.Playing) {
+    if ((await this.getState()) === PlayerState.Playing) {
       try {
         this.audioOutput.stop();
       } catch (error) {
@@ -89,10 +88,14 @@ export class Player {
         await this.decoder.stop();
       }
 
-      const format = await this.decoder.get('format', path) as DecodingFormat;
+      const format = (await this.decoder.get('format', path)) as DecodingFormat;
       this.currentMusic = { format };
 
-      this.logger.debug(`Audio format: ${format.formatID.toUpperCase()} ${format.bitsPerChannel}bit/${format.sampleRate}Hz`);
+      this.logger.debug(
+        `Audio format: ${format.formatID.toUpperCase()} ${
+          format.bitsPerChannel
+        }bit/${format.sampleRate}Hz`
+      );
 
       this.audioOutput = await this.getAudioOutput(this.audioApi, format);
       this.setAudioStream(await this.decoder.start(path));
@@ -101,13 +104,14 @@ export class Player {
         this.audioOutput.start();
       }
 
-      if (await this.getState() !== PlayerState.Playing) {
+      if ((await this.getState()) !== PlayerState.Playing) {
         throw new Error('Unknown error');
       }
-
     } catch (error) {
       if (this.audioOutput !== undefined) {
-        this.logger.debug(`Audio output state: active=${this.audioOutput.isActive()} stopped=${this.audioOutput.isStopped()}`);
+        this.logger.debug(
+          `Audio output state: active=${this.audioOutput.isActive()} stopped=${this.audioOutput.isStopped()}`
+        );
       }
       await this.stop();
       throw new Error(`Unable to play: ${error.message}`);
@@ -119,7 +123,7 @@ export class Player {
   async resume(): Promise<PlayerState> {
     this.logger.debug('resume()');
 
-    if (await this.getState() === PlayerState.Paused) {
+    if ((await this.getState()) === PlayerState.Paused) {
       try {
         this.audioOutput.start();
       } catch (error) {
@@ -139,7 +143,12 @@ export class Player {
 
     try {
       const format = this.currentMusic.format;
-      const byteOffset = timeSeconds * format.sampleRate * format.bitsPerChannel * format.channelsPerFrame / 8;
+      const byteOffset =
+        (timeSeconds *
+          format.sampleRate *
+          format.bitsPerChannel *
+          format.channelsPerFrame) /
+        8;
       this.setAudioStream(await this.decoder.seek(byteOffset));
     } catch (error) {
       this.logger.error(`Unable to seek: ${error.message}`);
@@ -194,7 +203,11 @@ export class Player {
     this.logger.debug('constructor()');
   }
 
-  private async getAudioOutput(api?: AudioApi, format?: DecodingFormat, retries: number = AUDIO_OUTPUT_RETRIES): Promise<AudioOutput> {
+  private async getAudioOutput(
+    api?: AudioApi,
+    format?: DecodingFormat,
+    retries: number = AUDIO_OUTPUT_RETRIES
+  ): Promise<AudioOutput> {
     this.logger.debug('getAudioOutput()');
 
     const options = {
@@ -215,7 +228,9 @@ export class Player {
     }
 
     if (this.audioOutput !== undefined) {
-      if (JSON.stringify(options) === JSON.stringify(this.audioOutput.options)) {
+      if (
+        JSON.stringify(options) === JSON.stringify(this.audioOutput.options)
+      ) {
         this.logger.debug('Uses existing audio output');
         return this.audioOutput;
       } else {
@@ -236,17 +251,22 @@ export class Player {
 
     let audioOutput: AudioOutput;
     try {
-      this.logger.debug(`Creates audio output with ${api !== undefined ? api.name : 'default'} API`);
+      this.logger.debug(
+        `Creates audio output with ${
+          api !== undefined ? api.name : 'default'
+        } API`
+      );
 
       audioOutput = new AudioOutput(options);
       audioOutput.on('finish', () => this.logger.debug('Audio output stopped'));
       return audioOutput;
-
     } catch (error) {
       this.logger.error(`Unable to create audio output: ${error.message}`);
 
       if (retries > 0) {
-        this.logger.debug(`Retry ${ AUDIO_OUTPUT_RETRIES - retries + 1}/${AUDIO_OUTPUT_RETRIES}`);
+        this.logger.debug(
+          `Retry ${AUDIO_OUTPUT_RETRIES - retries + 1}/${AUDIO_OUTPUT_RETRIES}`
+        );
         return this.getAudioOutput(api, format, retries - 1);
       } else {
         throw new Error('Unable to create audio output');
@@ -258,7 +278,10 @@ export class Player {
     this.audioOutput.clear();
     // In bytes
     const { channelCount, sampleFormat, sampleRate } = this.audioOutput.options;
-    const silenceByteCount = Math.round(sampleRate * sampleFormat / 8 * channelCount * SILENCE_DURATION_MS / 1000);
+    const silenceByteCount = Math.round(
+      (((sampleRate * sampleFormat) / 8) * channelCount * SILENCE_DURATION_MS) /
+        1000
+    );
     this.audioOutput.write(Buffer.alloc(silenceByteCount, 0, 'binary'));
   }
 

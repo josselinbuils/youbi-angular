@@ -60,7 +60,6 @@ export class Main {
 
             logger.debug(`Responds: ${logHeader}: ${preview}`);
             return res;
-
           } catch (error) {
             logger.error(`${logHeader}: ${error.stack}`);
             throw { message: error.message };
@@ -111,14 +110,18 @@ export class Main {
     mainWindowState.manage(this.mainWindow);
 
     if (this.isDev()) {
-      this.mainWindow.loadURL('http://localhost:4200', { extraHeaders: 'pragma: no-cache\n' });
+      this.mainWindow.loadURL('http://localhost:4200', {
+        extraHeaders: 'pragma: no-cache\n',
+      });
       this.mainWindow.webContents.openDevTools();
     } else {
-      this.mainWindow.loadURL(format({
-        pathname: join(__dirname, '../browser/index.html'),
-        protocol: 'file:',
-        slashes: true,
-      }));
+      this.mainWindow.loadURL(
+        format({
+          pathname: join(__dirname, '../browser/index.html'),
+          protocol: 'file:',
+          slashes: true,
+        })
+      );
     }
 
     this.mainWindow.on('closed', () => {
@@ -129,7 +132,10 @@ export class Main {
   }
 
   private static isDev(): boolean {
-    return (process.defaultApp || /node_modules[\\/]electron[\\/]/.test(process.execPath));
+    return (
+      process.defaultApp ||
+      /node_modules[\\/]electron[\\/]/.test(process.execPath)
+    );
   }
 }
 

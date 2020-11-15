@@ -1,4 +1,12 @@
-import { AfterContentInit, Component, ElementRef, Input, OnInit, Renderer2, ViewChild } from '@angular/core';
+import {
+  AfterContentInit,
+  Component,
+  ElementRef,
+  Input,
+  OnInit,
+  Renderer2,
+  ViewChild,
+} from '@angular/core';
 import debounce from 'lodash-es/debounce';
 
 import { PlayerState } from '../../../../shared/constants';
@@ -27,7 +35,9 @@ export class DetailsComponent implements AfterContentInit, OnInit {
 
       if (this.validateDiskInfo(album.musics)) {
         for (let i = 1; i <= album.musics[0].disk.of; i++) {
-          const diskMusics = album.musics.filter(music => music.disk.no === i);
+          const diskMusics = album.musics.filter(
+            (music) => music.disk.no === i
+          );
           this.disks.push(this.computeColumns(diskMusics));
         }
       } else {
@@ -62,14 +72,17 @@ export class DetailsComponent implements AfterContentInit, OnInit {
 
   private debouncedResizeEndHandler = debounce(this.resizeEndHandler, 50);
 
-  constructor(private musicPlayerService: MusicPlayerService,
-              private renderer: Renderer2) {
+  constructor(
+    private musicPlayerService: MusicPlayerService,
+    private renderer: Renderer2
+  ) {
     this.activeMusic = musicPlayerService.getActiveMusic();
   }
 
   ngAfterContentInit(): void {
-    new (window as any).ResizeObserver(entries => this.debouncedResizeEndHandler(entries[0].contentRect))
-      .observe(this.detailsElementRef.nativeElement);
+    new (window as any).ResizeObserver((entries) =>
+      this.debouncedResizeEndHandler(entries[0].contentRect)
+    ).observe(this.detailsElementRef.nativeElement);
   }
 
   ngOnInit(): void {
@@ -77,11 +90,11 @@ export class DetailsComponent implements AfterContentInit, OnInit {
 
     this.musicPlayerService
       .onActiveMusicChange()
-      .subscribe(music => this.activeMusic = music);
+      .subscribe((music) => (this.activeMusic = music));
 
     this.musicPlayerService
       .onStateChange()
-      .subscribe(state => this.playerState = state);
+      .subscribe((state) => (this.playerState = state));
   }
 
   async play(musics: Music[], index: number): Promise<void> {
@@ -98,10 +111,18 @@ export class DetailsComponent implements AfterContentInit, OnInit {
     logger.debug('computeColumns()');
 
     const style = window.getComputedStyle(this.detailsElementRef.nativeElement);
-    const padding = parseInt(style.getPropertyValue('padding').split(' ')[1], 10);
-    const containerWidth = this.detailsElementRef.nativeElement.clientWidth - padding;
+    const padding = parseInt(
+      style.getPropertyValue('padding').split(' ')[1],
+      10
+    );
+    const containerWidth =
+      this.detailsElementRef.nativeElement.clientWidth - padding;
     const { itemsByLine } = computeItemSize(
-      containerWidth, COLUMN_MARGIN_PX, PREFERRED_COLUMN_WIDTH_PX, MIN_COLUMNS_BY_ROW, MAX_COLUMNS_BY_ROW,
+      containerWidth,
+      COLUMN_MARGIN_PX,
+      PREFERRED_COLUMN_WIDTH_PX,
+      MIN_COLUMNS_BY_ROW,
+      MAX_COLUMNS_BY_ROW
     );
     const musicsByColumn = Math.ceil(musics.length / itemsByLine);
     const width = `calc(${(100 / itemsByLine).toFixed(2)}% - 60px)`;
@@ -121,13 +142,18 @@ export class DetailsComponent implements AfterContentInit, OnInit {
   private resizeEndHandler(contentRect: ClientRect): void {
     if (contentRect.height > 0) {
       const detailsElement = this.detailsElementRef.nativeElement;
-      const style = `${detailsElement.getAttribute('style')} --max-height: ${contentRect.height + 20}px`;
+      const style = `${detailsElement.getAttribute('style')} --max-height: ${
+        contentRect.height + 20
+      }px`;
       this.renderer.setAttribute(detailsElement, 'style', style);
     }
   }
 
   private validateDiskInfo(musics: Music[]): boolean {
-    return !musics.some(music => typeof music.disk.no !== 'number' || typeof music.disk.of !== 'number');
+    return !musics.some(
+      (music) =>
+        typeof music.disk.no !== 'number' || typeof music.disk.of !== 'number'
+    );
   }
 }
 

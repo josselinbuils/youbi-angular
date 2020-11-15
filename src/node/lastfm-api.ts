@@ -9,7 +9,6 @@ import { Logger } from './logger';
 import { PromiseQueue } from './promise-queue';
 
 export class LastfmApi {
-
   private cache = {};
   private readonly uri = 'http://ws.audioscrobbler.com/2.0';
 
@@ -20,8 +19,13 @@ export class LastfmApi {
   async getPreview(music: Music): Promise<string | undefined> {
     this.logger.debug('getPreview()');
 
-    const artist = music.albumArtist !== undefined ? music.albumArtist : music.artist;
-    const search = encodeURIComponent(`${artist} ${music.album}`.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+    const artist =
+      music.albumArtist !== undefined ? music.albumArtist : music.artist;
+    const search = encodeURIComponent(
+      `${artist} ${music.album}`
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+    );
 
     if (this.cache[search] !== undefined) {
       return this.cache[search];
@@ -35,26 +39,28 @@ export class LastfmApi {
     try {
       const promise = this.queue
         .enqueue(() => request(options))
-        .then(response => {
+        .then((response) => {
           const matches = response.results.albummatches.album;
 
           if (validate.array(matches)) {
-            const res = matches.filter(r => validate.string(r.image[0]['#text']))[0];
-            return res !== undefined ? res.image[res.image.length - 1]['#text'] : undefined;
+            const res = matches.filter((r) =>
+              validate.string(r.image[0]['#text'])
+            )[0];
+            return res !== undefined
+              ? res.image[res.image.length - 1]['#text']
+              : undefined;
           }
           return '';
         });
 
       this.cache[options.qs.album] = promise;
       return promise;
-
     } catch (error) {
       this.logger.error(error);
     }
   }
 
-  private constructor(private logger: Logger,
-                      private queue: PromiseQueue) {
+  private constructor(private logger: Logger, private queue: PromiseQueue) {
     this.logger.debug('constructor()');
   }
 

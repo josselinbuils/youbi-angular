@@ -9,7 +9,6 @@ const logger = Logger.create('MusicManagerService');
 
 @Injectable()
 export class MusicManagerService {
-
   private musicListPromise: Promise<Music[]>;
 
   constructor(private nodeExecutorService: NodeExecutorService) {}
@@ -18,7 +17,11 @@ export class MusicManagerService {
     logger.debug('getMusicList()');
 
     if (this.musicListPromise === undefined) {
-      this.musicListPromise = this.nodeExecutorService.exec('browser', 'getMusicList', ['/Volumes/music']);
+      this.musicListPromise = this.nodeExecutorService.exec(
+        'browser',
+        'getMusicList',
+        ['/Volumes/music']
+      );
     }
     return this.musicListPromise;
   }

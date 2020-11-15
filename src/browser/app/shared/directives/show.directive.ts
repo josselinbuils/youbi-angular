@@ -1,14 +1,22 @@
-import { Directive, EmbeddedViewRef, Input, Renderer2, TemplateRef, ViewContainerRef } from '@angular/core';
+import {
+  Directive,
+  EmbeddedViewRef,
+  Input,
+  Renderer2,
+  TemplateRef,
+  ViewContainerRef,
+} from '@angular/core';
 
 @Directive({ selector: '[appShow]' })
 export class ShowDirective {
-
   @Input()
   set appShow(show: boolean) {
     if (show) {
       if (this.embeddedViewRef === undefined) {
         this.viewContainer.clear();
-        this.embeddedViewRef = this.viewContainer.createEmbeddedView(this.templateRef);
+        this.embeddedViewRef = this.viewContainer.createEmbeddedView(
+          this.templateRef
+        );
         this.renderer.addClass(this.embeddedViewRef.rootNodes[0], 'shown');
       } else if (this.hideTimeout !== undefined) {
         window.clearTimeout(this.hideTimeout);
@@ -32,7 +40,9 @@ export class ShowDirective {
   private embeddedViewRef: EmbeddedViewRef<any> | undefined;
   private hideTimeout: number;
 
-  constructor(private viewContainer: ViewContainerRef,
-              private renderer: Renderer2,
-              private templateRef: TemplateRef<any>) {}
+  constructor(
+    private viewContainer: ViewContainerRef,
+    private renderer: Renderer2,
+    private templateRef: TemplateRef<any>
+  ) {}
 }

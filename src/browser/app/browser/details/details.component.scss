@@ -1,8 +1,8 @@
 @import '../../colors';
 
-$slide-down-duration: 0.20s;
+$slide-down-duration: 0.2s;
 $slide-down-effect: ease-in;
-$slide-up-duration: 0.10s;
+$slide-up-duration: 0.1s;
 $slide-up-effect: ease-out;
 
 @keyframes slide-down {
@@ -36,22 +36,24 @@ $slide-up-effect: ease-out;
 }
 
 :host(.shown) .details {
-  transition: margin-bottom $slide-down-duration $slide-down-effect, padding-bottom $slide-down-duration $slide-down-effect;
+  transition: margin-bottom $slide-down-duration $slide-down-effect,
+    padding-bottom $slide-down-duration $slide-down-effect;
   animation: slide-down $slide-down-duration $slide-down-effect;
   max-height: 1000px;
   margin: 0 0 20px 20px;
   padding-bottom: 25px;
   opacity: 1;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 
 .details {
-  font-size: .8em;
+  font-size: 0.8em;
   margin-left: 20px;
   padding-bottom: 0;
   box-sizing: border-box;
   cursor: default;
-  transition: margin-bottom $slide-up-duration $slide-up-effect, padding-bottom $slide-up-duration $slide-up-effect;
+  transition: margin-bottom $slide-up-duration $slide-up-effect,
+    padding-bottom $slide-up-duration $slide-up-effect;
   animation: slide-up $slide-up-duration $slide-up-effect;
   overflow: hidden;
   max-height: 0;
@@ -74,7 +76,8 @@ $slide-up-effect: ease-out;
           float: right;
         }
 
-        .number, .playing {
+        .number,
+        .playing {
           display: inline-block;
           width: 25px;
           vertical-align: top;
@@ -100,7 +103,8 @@ $slide-up-effect: ease-out;
   .header {
     padding: 15px 0 0 18px;
 
-    h2, h4 {
+    h2,
+    h4 {
       display: inline-block;
       margin: 0;
     }

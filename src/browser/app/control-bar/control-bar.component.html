@@ -1,48 +1,79 @@
 <div class="control-bar" [ngClass]="{ seeking: seeking }">
   <div class="left">
-    <div class="music-preview" [ngClass]="{ 'default-preview fa fa-music': !activeMusic || !activeMusic.coverURL }"
-         [ngStyle]="{ 'background-image': 'url(' + (activeMusic && activeMusic.coverURL ? activeMusic.coverURL : '') + ')' }"></div>
+    <div
+      class="music-preview"
+      [ngClass]="{
+        'default-preview fa fa-music': !activeMusic || !activeMusic.coverURL
+      }"
+      [ngStyle]="{
+        'background-image':
+          'url(' +
+          (activeMusic && activeMusic.coverURL ? activeMusic.coverURL : '') +
+          ')'
+      }"
+    ></div>
     <div class="music-info">
       <div *ngIf="activeMusic">
-        <div class="name">{{activeMusic.title}}</div>
-        <div class="artist">{{activeMusic.artist}}</div>
+        <div class="name">{{ activeMusic.title }}</div>
+        <div class="artist">{{ activeMusic.artist }}</div>
       </div>
     </div>
   </div>
   <div class="center">
     <div class="controls">
-      <div class="button random-button" [ngClass]="{ checked: random }" (click)="random = !random">
+      <div
+        class="button random-button"
+        [ngClass]="{ checked: random }"
+        (click)="random = !random"
+      >
         <i class="fa fa-random" aria-hidden="true"></i>
       </div>
       <div class="button prev-button" (click)="prev()">
         <i class="fa fa-step-backward" aria-hidden="true"></i>
       </div>
       <div class="button play-button" (click)="play()">
-        <i class="fa" [ngClass]="playerState !== PlayerState.Playing ? 'fa-play-circle' : 'fa-pause-circle'"
-           aria-hidden="true"></i>
+        <i
+          class="fa"
+          [ngClass]="
+            playerState !== PlayerState.Playing
+              ? 'fa-play-circle'
+              : 'fa-pause-circle'
+          "
+          aria-hidden="true"
+        ></i>
       </div>
       <div class="button next-button" (click)="next()">
         <i class="fa fa-step-forward" aria-hidden="true"></i>
       </div>
-      <div class="button repeat-button" [ngClass]="{ checked: repeat }" (click)="repeat = !repeat">
+      <div
+        class="button repeat-button"
+        [ngClass]="{ checked: repeat }"
+        (click)="repeat = !repeat"
+      >
         <i class="fa fa-repeat" aria-hidden="true"></i>
       </div>
     </div>
     <div class="time">
-      <div #currentTime class="current-time">{{readableTime}}</div>
+      <div #currentTime class="current-time">{{ readableTime }}</div>
       <div #progressBar class="progress-bar" (mousedown)="startSeek($event)">
         <div class="bar-container">
           <div class="bar" [ngStyle]="{ width: progress + '%' }"></div>
         </div>
       </div>
-      <div class="duration">{{readableDuration}}</div>
+      <div class="duration">{{ readableDuration }}</div>
     </div>
   </div>
   <div class="right">
-    <div class="button select-output-button" [ngClass]="{ checked: showOutputSelector }"
-         (click)="showOutputSelector = !showOutputSelector">
+    <div
+      class="button select-output-button"
+      [ngClass]="{ checked: showOutputSelector }"
+      (click)="showOutputSelector = !showOutputSelector"
+    >
       <i class="fa fa-headphones" aria-hidden="true"></i>
     </div>
   </div>
 </div>
-<app-output-selector [showSelector]="showOutputSelector" (close)="showOutputSelector = false"></app-output-selector>
+<app-output-selector
+  [showSelector]="showOutputSelector"
+  (close)="showOutputSelector = false"
+></app-output-selector>

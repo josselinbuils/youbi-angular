@@ -13,14 +13,16 @@ import { EventStatus, WorkerEvent } from './worker-event';
 const SEEK_TIMEOUT_MS = 5000;
 
 export class Decoder {
-
   audioStream: Transform;
   bufferList: Buffer[];
 
   private decodingWorker = this.createWorker();
 
   static create(): Decoder {
-    return new Decoder(Logger.create('Decoder'), Logger.create('DecodingWorker'));
+    return new Decoder(
+      Logger.create('Decoder'),
+      Logger.create('DecodingWorker')
+    );
   }
 
   async get(event: string, path: string): Promise<any> {
@@ -28,7 +30,10 @@ export class Decoder {
   }
 
   async isActive(): Promise<boolean> {
-    return this.decodingWorker !== undefined && (await this.execInWorker('isActive')) === true;
+    return (
+      this.decodingWorker !== undefined &&
+      (await this.execInWorker('isActive')) === true
+    );
   }
 
   async seek(byteOffset: number): Promise<Readable> {
@@ -39,7 +44,7 @@ export class Decoder {
       let buffer = Buffer.concat(this.bufferList);
 
       while (buffer.length < byteOffset) {
-        if ((Date.now() - startTime) > SEEK_TIMEOUT_MS) {
+        if (Date.now() - startTime > SEEK_TIMEOUT_MS) {
           throw new Error('Seek timeout reached');
         }
         await delay(100);
@@ -85,22 +90,23 @@ export class Decoder {
     this.bufferList = [];
   }
 
-  private constructor(private logger: Logger,
-                      private workerLogger: Logger) {
+  private constructor(private logger: Logger, private workerLogger: Logger) {
     logger.debug('constructor()');
   }
 
   private createWorker(): ChildProcess {
     this.logger.debug('createWorker()');
 
-    const decodingWorker = fork(join(__dirname, 'decoding-worker.js'), [], { stdio: ['ipc', 'pipe', 2] });
+    const decodingWorker = fork(join(__dirname, 'decoding-worker.js'), [], {
+      stdio: ['ipc', 'pipe', 2],
+    });
 
     decodingWorker.stdout.on('data', (buffer: Buffer) => {
       this.bufferList.push(buffer);
       this.audioStream.write(buffer);
     });
 
-    decodingWorker.on('message', event => {
+    decodingWorker.on('message', (event) => {
       if (event.name === 'debug') {
         this.workerLogger.debug(event.data);
       }
@@ -110,7 +116,7 @@ export class Decoder {
   }
 
   private async execInWorker(commandName: string, args?: any[]): Promise<any> {
-    return new Promise<any>(resolve => {
+    return new Promise<any>((resolve) => {
       const listener = (event: WorkerEvent) => {
         const { data, name, status } = event;
 

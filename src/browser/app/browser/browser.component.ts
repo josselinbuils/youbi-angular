@@ -1,4 +1,12 @@
-import { AfterContentInit, Component, ElementRef, HostListener, OnInit, QueryList, ViewChildren } from '@angular/core';
+import {
+  AfterContentInit,
+  Component,
+  ElementRef,
+  HostListener,
+  OnInit,
+  QueryList,
+  ViewChildren,
+} from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import * as ColorThief from 'color-thief-browser';
 import debounce from 'lodash-es/debounce';
@@ -6,7 +14,11 @@ import debounce from 'lodash-es/debounce';
 import { Music } from '../../../shared/interfaces';
 import { validate } from '../../../shared/utils';
 import { Album } from '../shared/interfaces';
-import { Logger, MusicManagerService, MusicPlayerService } from '../shared/services';
+import {
+  Logger,
+  MusicManagerService,
+  MusicPlayerService,
+} from '../shared/services';
 import { computeItemSize, groupBy } from '../shared/utils';
 
 const ITEM_MARGIN_PX = 20;
@@ -23,7 +35,6 @@ const logger = Logger.create('BrowserComponent');
   styleUrls: ['./browser.component.scss'],
 })
 export class BrowserComponent implements AfterContentInit, OnInit {
-
   @ViewChildren('item') items: QueryList<ElementRef>;
 
   albums: Album[];
@@ -41,10 +52,12 @@ export class BrowserComponent implements AfterContentInit, OnInit {
   private debouncedResizeEndHandler = debounce(this.resizeEndHandler, 50);
   private debouncedScrollEndHandler = debounce(this.scrollEndHandler, 500);
 
-  constructor(public sanitizer: DomSanitizer,
-              private hostElementRef: ElementRef,
-              private musicManagerService: MusicManagerService,
-              private musicPlayerService: MusicPlayerService) {}
+  constructor(
+    public sanitizer: DomSanitizer,
+    private hostElementRef: ElementRef,
+    private musicManagerService: MusicManagerService,
+    private musicPlayerService: MusicPlayerService
+  ) {}
 
   ngAfterContentInit(): void {
     logger.debug('ngAfterContentInit()');
@@ -57,16 +70,31 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     this.musics = await this.musicManagerService.getMusicList();
     this.albums = [];
 
-    for (const [name, musics] of Object.entries(groupBy(this.musics, 'album'))) {
+    for (const [name, musics] of Object.entries(
+      groupBy(this.musics, 'album')
+    )) {
       const { albumArtist, coverURL, year } = musics[0];
       const artist = albumArtist !== undefined ? albumArtist : musics[0].artist;
-      const firstArtistLetter = artist.slice(0, 1).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      this.albums.push({ artist, coverURL, firstArtistLetter, musics, name, year });
+      const firstArtistLetter = artist
+        .slice(0, 1)
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+      this.albums.push({
+        artist,
+        coverURL,
+        firstArtistLetter,
+        musics,
+        name,
+        year,
+      });
     }
 
     this.albums = this.albums.sort((a, b) => {
       const artistComparison = a.artist.localeCompare(b.artist);
-      return artistComparison !== 0 ? artistComparison : a.name.localeCompare(b.name);
+      return artistComparison !== 0
+        ? artistComparison
+        : a.name.localeCompare(b.name);
     });
 
     logger.debug('Albums:', this.albums);
@@ -83,7 +111,10 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     const itemsByLine = this.itemsByLine;
     this.computeItemSize();
 
-    if (this.albums !== undefined && (itemsByLine === undefined || this.itemsByLine !== itemsByLine)) {
+    if (
+      this.albums !== undefined &&
+      (itemsByLine === undefined || this.itemsByLine !== itemsByLine)
+    ) {
       this.computeLines();
     }
   }
@@ -110,20 +141,27 @@ export class BrowserComponent implements AfterContentInit, OnInit {
       try {
         const coverURL = album.musics[0].coverURL;
         this.colorPalette = validate.string(coverURL)
-          ? (await this.getColorPalette(coverURL)).map(rgb => `rgb(${rgb.join(', ')})`)
+          ? (await this.getColorPalette(coverURL)).map(
+              (rgb) => `rgb(${rgb.join(', ')})`
+            )
           : defaultColorPalette;
       } catch (error) {
         logger.error(`Unable to compute color palette: ${error.stack}`);
         this.colorPalette = defaultColorPalette;
       }
 
-      const newAlbumLine = this.albumLines.find(albumLine => albumLine.includes(album));
+      const newAlbumLine = this.albumLines.find((albumLine) =>
+        albumLine.includes(album)
+      );
 
-      if (this.selectedAlbum === undefined || newAlbumLine.includes(this.selectedAlbum)) {
+      if (
+        this.selectedAlbum === undefined ||
+        newAlbumLine.includes(this.selectedAlbum)
+      ) {
         this.selectedAlbum = album;
       } else {
         delete this.selectedAlbum;
-        setTimeout(() => this.selectedAlbum = album, 150);
+        setTimeout(() => (this.selectedAlbum = album), 150);
       }
     } else {
       delete this.selectedAlbum;
@@ -134,7 +172,11 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     logger.debug('computeItemSize()');
 
     const res = computeItemSize(
-      this.hostElementRef.nativeElement.offsetWidth, ITEM_MARGIN_PX, PREFERRED_ITEM_WIDTH_PX, MIN_ITEMS_BY_ROW, MAX_ITEMS_BY_ROW,
+      this.hostElementRef.nativeElement.offsetWidth,
+      ITEM_MARGIN_PX,
+      PREFERRED_ITEM_WIDTH_PX,
+      MIN_ITEMS_BY_ROW,
+      MAX_ITEMS_BY_ROW
     );
     this.itemSize = res.itemSize;
     this.itemsByLine = res.itemsByLine;
@@ -148,14 +190,16 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     this.albumLines = [];
 
     for (let i = 0; i < linesCount; i++) {
-      this.albumLines.push(this.albums.slice(i * this.itemsByLine, (i + 1) * this.itemsByLine));
+      this.albumLines.push(
+        this.albums.slice(i * this.itemsByLine, (i + 1) * this.itemsByLine)
+      );
     }
   }
 
   private async getColorPalette(coverURL: string): Promise<number[][]> {
     logger.debug('getColorPalette()');
 
-    return new Promise<number[][]>(resolve => {
+    return new Promise<number[][]>((resolve) => {
       const img = new Image();
       img.onload = () => resolve(colorThief.getPalette(img, 2));
       img.crossOrigin = 'anonymous';
@@ -168,18 +212,25 @@ export class BrowserComponent implements AfterContentInit, OnInit {
     this.scrolling = true;
 
     if (this.items !== undefined) {
-      this.intersectionObserver = new IntersectionObserver((intersections) => {
-        const intersection = intersections.reverse().find(i => i.isIntersecting);
+      this.intersectionObserver = new IntersectionObserver(
+        (intersections) => {
+          const intersection = intersections
+            .reverse()
+            .find((i) => i.isIntersecting);
 
-        if (intersection !== undefined) {
-          this.letter = intersection.target.getAttribute('letter');
+          if (intersection !== undefined) {
+            this.letter = intersection.target.getAttribute('letter');
+          }
+        },
+        {
+          root: this.hostElementRef.nativeElement,
+          rootMargin: '0px 0px -90% 0px',
         }
-      }, {
-        root: this.hostElementRef.nativeElement,
-        rootMargin: '0px 0px -90% 0px',
-      });
+      );
 
-      this.items.forEach(item => this.intersectionObserver.observe(item.nativeElement));
+      this.items.forEach((item) =>
+        this.intersectionObserver.observe(item.nativeElement)
+      );
     }
   }
 

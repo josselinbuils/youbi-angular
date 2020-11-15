@@ -11,8 +11,16 @@ enum LogLevel {
 }
 
 export class Logger {
-
-  private static colors = ['blue', 'magenta', 'cyan', 'yellow', 'lightGray', 'lightMagenta', 'lightCyan', 'lightYellow'];
+  private static colors = [
+    'blue',
+    'magenta',
+    'cyan',
+    'yellow',
+    'lightGray',
+    'lightMagenta',
+    'lightCyan',
+    'lightYellow',
+  ];
   private static n = 0;
 
   color: string;

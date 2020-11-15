@@ -1,7 +1,6 @@
 import { environment } from '../../../environments/environment';
 
 export class Logger {
-
   private times = {};
 
   static create(tag: string): Logger {
@@ -36,7 +35,9 @@ export class Logger {
     }
 
     delete this.times[tag];
-    this.debug(`${tag}: ${Math.round((performance.now() - startTime) * 100) / 100}ms`);
+    this.debug(
+      `${tag}: ${Math.round((performance.now() - startTime) * 100) / 100}ms`
+    );
   }
 
   private log(level: string, attr: any[]): void {

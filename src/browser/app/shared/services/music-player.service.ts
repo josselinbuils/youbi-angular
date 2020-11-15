@@ -17,12 +17,13 @@ const logger = Logger.create('MusicPlayerService');
 
 @Injectable()
 export class MusicPlayerService implements OnInit {
-
   private activeMusicSubject: Subject<Music> = new Subject<Music>();
   private activeMusic: Music;
   private playlist: Music[];
   private state: PlayerState;
-  private stateSubject: BehaviorSubject<PlayerState> = new BehaviorSubject<PlayerState>(PlayerState.Stopped);
+  private stateSubject: BehaviorSubject<PlayerState> = new BehaviorSubject<
+    PlayerState
+  >(PlayerState.Stopped);
   private timeMs: number;
   private timerId: number;
   private timeSubject: Subject<number> = new Subject<number>();
@@ -67,7 +68,7 @@ export class MusicPlayerService implements OnInit {
 
     const music = this.playlist[newIndex];
 
-    if (await this.getState() === PlayerState.Playing) {
+    if ((await this.getState()) === PlayerState.Playing) {
       await this.playMusic(music);
     } else {
       this.setActiveMusic(music);
@@ -89,7 +90,7 @@ export class MusicPlayerService implements OnInit {
   async pause(): Promise<void> {
     logger.debug('pause()');
 
-    if (await this.getState() === PlayerState.Playing) {
+    if ((await this.getState()) === PlayerState.Playing) {
       this.setState(await this.nodeExecutorService.exec('player', 'pause'));
 
       if (this.state === PlayerState.Paused) {
@@ -133,7 +134,7 @@ export class MusicPlayerService implements OnInit {
 
     const music = this.playlist[newIndex];
 
-    if (await this.getState() === PlayerState.Playing) {
+    if ((await this.getState()) === PlayerState.Playing) {
       await this.playMusic(music);
     } else {
       this.setActiveMusic(music);
@@ -143,7 +144,7 @@ export class MusicPlayerService implements OnInit {
   async resume(): Promise<void> {
     logger.debug('resume()');
 
-    if (await this.getState() === PlayerState.Paused) {
+    if ((await this.getState()) === PlayerState.Paused) {
       this.setState(await this.nodeExecutorService.exec('player', 'resume'));
 
       if (this.state === PlayerState.Playing) {
@@ -159,8 +160,10 @@ export class MusicPlayerService implements OnInit {
   async seek(timeSeconds: number): Promise<void> {
     logger.debug(`seek(): ${timeSeconds}s`);
 
-    if (await this.getState() !== PlayerState.Stopped) {
-      this.setState(await this.nodeExecutorService.exec('player', 'seek', [timeSeconds]));
+    if ((await this.getState()) !== PlayerState.Stopped) {
+      this.setState(
+        await this.nodeExecutorService.exec('player', 'seek', [timeSeconds])
+      );
 
       if (this.state !== PlayerState.Stopped) {
         this.timeMs = timeSeconds * 1000;
@@ -188,7 +191,7 @@ export class MusicPlayerService implements OnInit {
   async stop(): Promise<void> {
     logger.debug('stop()');
 
-    if (await this.getState() !== PlayerState.Stopped) {
+    if ((await this.getState()) !== PlayerState.Stopped) {
       this.setState(await this.nodeExecutorService.exec('player', 'stop'));
     }
     this.resetTime();
@@ -197,7 +200,9 @@ export class MusicPlayerService implements OnInit {
   private async playMusic(music: Music): Promise<void> {
     logger.debug('playMusic()', music.path);
 
-    this.setState(await this.nodeExecutorService.exec('player', 'play', [music.path]));
+    this.setState(
+      await this.nodeExecutorService.exec('player', 'play', [music.path])
+    );
 
     if (this.activeMusic !== music) {
       this.setActiveMusic(music);
@@ -241,8 +246,11 @@ export class MusicPlayerService implements OnInit {
       lastTime = now;
 
       // Should be done in the node player, find a way!
-      if (this.timeMs >= (this.activeMusic.duration * 1000 - SAFE_END_DELAY)) {
-        if (this.playlist.indexOf(this.activeMusic) < (this.playlist.length - 1)) {
+      if (this.timeMs >= this.activeMusic.duration * 1000 - SAFE_END_DELAY) {
+        if (
+          this.playlist.indexOf(this.activeMusic) <
+          this.playlist.length - 1
+        ) {
           this.stopTimer();
           await this.next();
         } else {
@@ -252,7 +260,6 @@ export class MusicPlayerService implements OnInit {
       } else {
         this.timeSubject.next(this.timeMs / 1000);
       }
-
     }, TIMER_INTERVAL);
   }
 

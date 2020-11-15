@@ -1,16 +1,33 @@
-<div [ngClass]="{ show: letter }" class="letter">{{letter}}</div>
+<div [ngClass]="{ show: letter }" class="letter">{{ letter }}</div>
 <div *ngFor="let line of albumLines" class="line">
-  <div #item class="item" *ngFor="let album of line" [attr.letter]="album.firstArtistLetter"
-       [ngClass]="{ 'default-preview fa fa-music': !album.coverURL }"
-       [ngStyle]="{ 'background-image': album.coverURL ? 'url(' + album.coverURL + ')' : '', width: itemSize + 'px', height: itemSize + 'px' }"
-       (click)="toggleDetails(album)">
+  <div
+    #item
+    class="item"
+    *ngFor="let album of line"
+    [attr.letter]="album.firstArtistLetter"
+    [ngClass]="{ 'default-preview fa fa-music': !album.coverURL }"
+    [ngStyle]="{
+      'background-image': album.coverURL ? 'url(' + album.coverURL + ')' : '',
+      width: itemSize + 'px',
+      height: itemSize + 'px'
+    }"
+    (click)="toggleDetails(album)"
+  >
     <!--suppress NsUnresolvedStyleClassReference -->
-    <div *appShow="album === selectedAlbum"
-         [attr.style]="sanitizer.bypassSecurityTrustStyle('--details-background: ' + colorPalette[0])"
-         class="caret"></div>
+    <div
+      *appShow="album === selectedAlbum"
+      [attr.style]="
+        sanitizer.bypassSecurityTrustStyle(
+          '--details-background: ' + colorPalette[0]
+        )
+      "
+      class="caret"
+    ></div>
   </div>
-  <app-details *appShow="line.includes(selectedAlbum)"
-               [album]="line.includes(selectedAlbum) ? selectedAlbum : undefined"
-               [colorPalette]="line.includes(selectedAlbum) ? colorPalette: undefined"
-               [width]="lineWidth"></app-details>
+  <app-details
+    *appShow="line.includes(selectedAlbum)"
+    [album]="line.includes(selectedAlbum) ? selectedAlbum : undefined"
+    [colorPalette]="line.includes(selectedAlbum) ? colorPalette : undefined"
+    [width]="lineWidth"
+  ></app-details>
 </div>

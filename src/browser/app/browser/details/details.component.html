@@ -1,20 +1,46 @@
-<div #details class="details" [ngStyle]="{ background: backgroundStyle, width: width + 'px' }">
+<div
+  #details
+  class="details"
+  [ngStyle]="{ background: backgroundStyle, width: width + 'px' }"
+>
   <div [ngStyle]="{ color: textStyle }" class="header">
-    <h2>{{currentAlbum.name}}</h2>
-    <h4>{{currentAlbum.artist}}<span *ngIf="currentAlbum.year"> ({{currentAlbum.year}})</span></h4>
+    <h2>{{ currentAlbum.name }}</h2>
+    <h4>
+      {{ currentAlbum.artist
+      }}<span *ngIf="currentAlbum.year"> ({{ currentAlbum.year }})</span>
+    </h4>
   </div>
   <div *ngFor="let disk of disks" class="disk">
-    <div *ngFor="let column of disk" class="column" [ngStyle]="{ width: column.width }">
-      <div *ngFor="let music of column.musics" [ngClass]="{ selected: music === selected }" class="music"
-           [style.background]="music === selected ? selectedBackgroundStyle : 'none'"
-           [style.color]="music === selected ? selectedTextStyle : textStyle"
-           (click)="select(music)" (dblclick)="play(currentAlbum.musics, currentAlbum.musics.indexOf(music))">
-      <span *ngIf="music !== activeMusic || playerState !== PlayerState.Playing"
-            class="number">{{music.track.no}}</span>
-        <i *ngIf="music === activeMusic && playerState === PlayerState.Playing" class="playing fa fa-volume-down"
-           aria-hidden="true"></i>
-        <span class="title">{{music.title}}</span>
-        <span class="duration">{{music.readableDuration}}</span>
+    <div
+      *ngFor="let column of disk"
+      class="column"
+      [ngStyle]="{ width: column.width }"
+    >
+      <div
+        *ngFor="let music of column.musics"
+        [ngClass]="{ selected: music === selected }"
+        class="music"
+        [style.background]="
+          music === selected ? selectedBackgroundStyle : 'none'
+        "
+        [style.color]="music === selected ? selectedTextStyle : textStyle"
+        (click)="select(music)"
+        (dblclick)="
+          play(currentAlbum.musics, currentAlbum.musics.indexOf(music))
+        "
+      >
+        <span
+          *ngIf="music !== activeMusic || playerState !== PlayerState.Playing"
+          class="number"
+          >{{ music.track.no }}</span
+        >
+        <i
+          *ngIf="music === activeMusic && playerState === PlayerState.Playing"
+          class="playing fa fa-volume-down"
+          aria-hidden="true"
+        ></i>
+        <span class="title">{{ music.title }}</span>
+        <span class="duration">{{ music.readableDuration }}</span>
       </div>
     </div>
   </div>

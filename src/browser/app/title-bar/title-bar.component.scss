@@ -19,7 +19,8 @@ $color: #a5a5a5;
         stroke: $focused-color;
       }
 
-      path, polygon {
+      path,
+      polygon {
         fill: $focused-color;
       }
     }
@@ -38,7 +39,8 @@ $color: #a5a5a5;
         background: rgb(232, 17, 35);
       }
 
-      &.maximize:hover, &.minimize:hover {
+      &.maximize:hover,
+      &.minimize:hover {
         background: rgba(255, 255, 255, 0.13);
       }
 
@@ -50,7 +52,8 @@ $color: #a5a5a5;
           stroke: $color;
         }
 
-        path, polygon {
+        path,
+        polygon {
           fill: $color;
         }
       }

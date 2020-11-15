@@ -1,5 +1,5 @@
 export async function delay(duration: number): Promise<void> {
-  return new Promise<void>(resolve => setTimeout(resolve, duration));
+  return new Promise<void>((resolve) => setTimeout(resolve, duration));
 }
 
 export const validate = {

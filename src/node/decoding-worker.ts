@@ -18,7 +18,6 @@ import { EventStatus, WorkerEvent } from './worker-event';
 const RESULT_EVENT = 'result';
 
 class DecodingWorker {
-
   asset: Asset;
 
   private debug(message: string): void {
@@ -33,8 +32,8 @@ class DecodingWorker {
   private get(event: string, path: string): void {
     this.debug(`get(): ${event} of ${path}`);
     this.asset = Asset.fromFile(path);
-    this.asset.get(event, res => this.success(res));
-    this.asset.on('error', error => this.error(error.message));
+    this.asset.get(event, (res) => this.success(res));
+    this.asset.on('error', (error) => this.error(error.message));
   }
 
   private hasDecoder(): void {
@@ -76,7 +75,7 @@ class DecodingWorker {
 
     // Needs to wait for decodeStart event to have asset.decoder defined
     this.asset.on('decodeStart', () => {
-      this.asset.decoder.on('data', typedArray => {
+      this.asset.decoder.on('data', (typedArray) => {
         process.stdout.write(Buffer.from(typedArray.buffer));
       });
       this.success();
@@ -84,7 +83,7 @@ class DecodingWorker {
 
     let lastStep = 0;
 
-    this.asset.on('buffer', progress => {
+    this.asset.on('buffer', (progress) => {
       const step = Math.round(progress / 10);
 
       if (step > lastStep || progress === 100) {
@@ -93,7 +92,7 @@ class DecodingWorker {
       }
     });
 
-    this.asset.on('error', error => this.error(error.message));
+    this.asset.on('error', (error) => this.error(error.message));
     this.asset.start();
   }
 

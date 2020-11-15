@@ -8,7 +8,6 @@ const getCurrentElectronWindow = (window as any).getCurrentElectronWindow;
   styleUrls: ['./title-bar.component.scss'],
 })
 export class TitleBarComponent implements OnInit {
-
   active: boolean;
   maximized: boolean;
 

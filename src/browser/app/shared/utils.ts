@@ -10,20 +10,23 @@
  */
 export function closest(element: HTMLElement, selector: string): HTMLElement {
   do {
-    if ((<any> element).matches(selector)) {
+    if ((<any>element).matches(selector)) {
       return element;
     }
 
     element = element.parentElement;
-
   } while (element instanceof HTMLElement);
 
   return undefined;
 }
 
-export function computeItemSize(containerWidth: number, itemMargin: number, preferredItemWidth: number, minItemsByRow: number,
-                                maxItemsByRow: number): { itemsByLine: number; itemSize: number; lineWidth: number } {
-
+export function computeItemSize(
+  containerWidth: number,
+  itemMargin: number,
+  preferredItemWidth: number,
+  minItemsByRow: number,
+  maxItemsByRow: number
+): { itemsByLine: number; itemSize: number; lineWidth: number } {
   const dWidths: number[] = [];
   let itemsByLine: number;
   let itemSize: number;
@@ -44,7 +47,10 @@ export function computeItemSize(containerWidth: number, itemMargin: number, pref
   return { itemsByLine, itemSize, lineWidth };
 }
 
-export function groupBy(array: Array<any>, key: string): { [key: string]: any } {
+export function groupBy(
+  array: Array<any>,
+  key: string
+): { [key: string]: any } {
   return array.reduce((map, item) => {
     if (map[item[key]] === undefined) {
       map[item[key]] = [];

@@ -17,11 +17,14 @@ import { Main } from './main';
 import { Store } from './store';
 
 export class Browser {
-
   private coversPath = join(Main.getAppDataPath(), COVERS_FOLDER);
 
   static create(): Browser {
-    return new Browser(Logger.create('Browser'), LastfmApi.create(), Store.getInstance());
+    return new Browser(
+      Logger.create('Browser'),
+      LastfmApi.create(),
+      Store.getInstance()
+    );
   }
 
   async getMusicList(folderPath: string): Promise<Music[]> {
@@ -48,7 +51,7 @@ export class Browser {
       if (this.store.has('musicPaths')) {
         musicPaths = this.store.get('musicPaths');
       } else {
-        musicPaths = (await this.listMusics(folderPath));
+        musicPaths = await this.listMusics(folderPath);
         this.store.set('musicPaths', musicPaths);
       }
       this.logger.timeEnd('listsMusics');
@@ -63,11 +66,14 @@ export class Browser {
 
         if (i > 0) {
           const now = Date.now();
-          const endTime = now + (musicPaths.length - i) * (now - startTime) / i;
+          const endTime =
+            now + ((musicPaths.length - i) * (now - startTime)) / i;
           remainingTime = ` (${moment().to(endTime, true)} remaining)`;
         }
 
-        this.logger.debug(`Processes music ${++i}/${musicPaths.length}${remainingTime}`);
+        this.logger.debug(
+          `Processes music ${++i}/${musicPaths.length}${remainingTime}`
+        );
 
         const music = await this.getMusicInfo(path);
         await this.generateCover(music);
@@ -85,10 +91,11 @@ export class Browser {
     return musics;
   }
 
-  private constructor(private logger: Logger,
-                      private previewApi: LastfmApi,
-                      private store: Store) {
-
+  private constructor(
+    private logger: Logger,
+    private previewApi: LastfmApi,
+    private store: Store
+  ) {
     logger.debug('constructor()');
     protocol.registerFileProtocol('cover', (request, callback) => {
       const coverFileName = request.url.substr(8);
@@ -106,7 +113,7 @@ export class Browser {
         const coverPath = join(this.coversPath, coverFileName);
 
         if (!pathExistsSync(coverPath)) {
-          await new Promise<void>(async resolve => {
+          await new Promise<void>(async (resolve) => {
             (await jimp.read(picture[0].data))
               .resize(220, 220)
               .quality(85)
@@ -114,7 +121,6 @@ export class Browser {
           });
         }
         music.coverURL = `cover://${coverFileName}`;
-
       } else {
         const coverURL = await this.previewApi.getPreview(music);
 
@@ -129,12 +135,39 @@ export class Browser {
 
   private async getMusicInfo(path: string): Promise<any> {
     const { common, format } = await musicMetadata.parseFile(path);
-    const { album, albumartist, artist, artists, comment, composer, disk, genre, picture, title, track, year } = common;
+    const {
+      album,
+      albumartist,
+      artist,
+      artists,
+      comment,
+      composer,
+      disk,
+      genre,
+      picture,
+      title,
+      track,
+      year,
+    } = common;
     const { duration, sampleRate } = format;
     const readableDuration = moment.utc(duration * 1000).format('mm:ss');
     return {
-      album, albumArtist: albumartist, artist, artists, comment, composer, disk, duration, genre, path, picture, readableDuration,
-      sampleRate, title, track, year,
+      album,
+      albumArtist: albumartist,
+      artist,
+      artists,
+      comment,
+      composer,
+      disk,
+      duration,
+      genre,
+      path,
+      picture,
+      readableDuration,
+      sampleRate,
+      title,
+      track,
+      year,
     };
   }
 
@@ -148,11 +181,13 @@ export class Browser {
     if (lstatSync(path).isDirectory()) {
       const res = [];
 
-      const filePromises = (await readdir(path))
-        .map(async dir => this.listMusics(join(path, dir)));
+      const filePromises = (await readdir(path)).map(async (dir) =>
+        this.listMusics(join(path, dir))
+      );
 
-      (await Promise.all<string[][]>(filePromises))
-        .forEach(a => res.push(...a));
+      (await Promise.all<string[][]>(filePromises)).forEach((a) =>
+        res.push(...a)
+      );
 
       return res.filter(this.isSupported);
     }

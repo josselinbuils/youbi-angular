@@ -1,9 +1,20 @@
-import { Component, ElementRef, EventEmitter, Input, Output, Renderer2 } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  Output,
+  Renderer2,
+} from '@angular/core';
 
 import { PlayerState } from '../../../../shared/constants';
 import { AudioApi } from '../../../../shared/interfaces';
 import { MOUSE_BUTTON } from '../../shared/constants';
-import { Logger, MusicPlayerService, NodeExecutorService } from '../../shared/services';
+import {
+  Logger,
+  MusicPlayerService,
+  NodeExecutorService,
+} from '../../shared/services';
 import { closest } from '../../shared/utils';
 
 const logger = Logger.create('OutputSelectorComponent');
@@ -14,7 +25,6 @@ const logger = Logger.create('OutputSelectorComponent');
   styleUrls: ['./output-selector.component.scss'],
 })
 export class OutputSelectorComponent {
-
   @Input()
   set showSelector(show: boolean) {
     if (this.shown !== show) {
@@ -35,10 +45,12 @@ export class OutputSelectorComponent {
 
   private destroyMouseDownHandler: () => void;
 
-  constructor(private hostElementRef: ElementRef,
-              private musicPlayerService: MusicPlayerService,
-              private nodeExecutorService: NodeExecutorService,
-              private renderer: Renderer2) {}
+  constructor(
+    private hostElementRef: ElementRef,
+    private musicPlayerService: MusicPlayerService,
+    private nodeExecutorService: NodeExecutorService,
+    private renderer: Renderer2
+  ) {}
 
   hide(): void {
     logger.debug('hide()');
@@ -71,7 +83,6 @@ export class OutputSelectorComponent {
       if (playerState !== PlayerState.Stopped) {
         await this.musicPlayerService.seek(time);
       }
-
     } catch (error) {
       logger.error(error);
     }
@@ -79,11 +90,24 @@ export class OutputSelectorComponent {
 
   async show(): Promise<void> {
     logger.debug('show()');
-    this.apiList = await await this.nodeExecutorService.exec('player', 'getAudioAPIList');
-    const activeApi = await this.nodeExecutorService.exec('player', 'getActiveAudioAPI');
-    this.activeApiId = activeApi !== undefined ? activeApi.id : this.apiList.find(api => api.default).id;
+    this.apiList = await await this.nodeExecutorService.exec(
+      'player',
+      'getAudioAPIList'
+    );
+    const activeApi = await this.nodeExecutorService.exec(
+      'player',
+      'getActiveAudioAPI'
+    );
+    this.activeApiId =
+      activeApi !== undefined
+        ? activeApi.id
+        : this.apiList.find((api) => api.default).id;
     this.shown = true;
-    this.destroyMouseDownHandler = this.renderer.listen(this.hostElementRef.nativeElement, 'click', this.clickHandler.bind(this));
+    this.destroyMouseDownHandler = this.renderer.listen(
+      this.hostElementRef.nativeElement,
+      'click',
+      this.clickHandler.bind(this)
+    );
   }
 
   private clickHandler(event: MouseEvent): void {
@@ -92,7 +116,9 @@ export class OutputSelectorComponent {
     if (![MOUSE_BUTTON.LEFT, MOUSE_BUTTON.RIGHT].includes(event.button)) {
       return;
     }
-    if (closest(event.target as HTMLElement, '.output-selector') === undefined) {
+    if (
+      closest(event.target as HTMLElement, '.output-selector') === undefined
+    ) {
       this.close.emit();
     }
   }
