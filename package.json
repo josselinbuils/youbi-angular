@@ -63,6 +63,7 @@
     "font-awesome": "4.7.0",
     "lodash-es": "4.17.8",
     "mousetrap": "1.6.1",
+    "prettier": "^2.1.2",
     "rxjs": "5.5.8",
     "tslint": "5.9.1",
     "typescript": "2.8.1",
